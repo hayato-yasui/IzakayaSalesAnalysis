@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from Common.Logic.Preprocess import Preprocess
 from Common.Logic.Postprocess import Postprocess
 from Common.Setting.PreprocessSetting import PreprocessSetting
+from Common.Setting.MultipleRegressionAnalysis import MultipleRegressionAnalysisSetting
 
 
 # class PLAYER_ANSWER(Enum):
@@ -18,8 +19,6 @@ from Common.Setting.PreprocessSetting import PreprocessSetting
 #     MID = 'MID'
 #     PASS = 'PASS'
 
-class MultipleRegressionAnalysisSetting(object):
-    CORR_LIMIT = 0.5
 
 # 重回帰分析クラス
 class MultipleRegressionAnalysis:

@@ -3,15 +3,11 @@ import numpy as np
 import datetime
 import seaborn as sns
 import matplotlib.pyplot as plt
-import matplotlib
-
 from Common.Logic.Preprocess import Preprocess
 from Common.Logic.Postprocess import Postprocess
 from Common.Setting.PreprocessSetting import PreprocessSetting
+from Common.Setting.ItemCorrAnalysisSetting import ItemCorrAnalysisSetting
 
-
-class ItemCorrAnalysisSetting(object):
-    CORR_LIMIT = 0.5
 
 # 商品間の相関係数算出クラス
 class ItemCorrAnalysis:
@@ -30,11 +26,6 @@ class ItemCorrAnalysis:
         corr = self._calc_correlation(self.df_preproc)
         print(corr)
         self._plot_corr(corr)
-        
-        
-        # self._create_prediction_model()
-        # self._postprocess()
-
 
     def _preprocess(self):
         df_src = self.preproc.fetch_csv_data_and_convert_format_to_df(self.preproc_s.PROCESSED_DATA_DIR,self.preproc_s.DATA_FILES_TO_FETCH)
@@ -56,7 +47,6 @@ class ItemCorrAnalysis:
     def _get_preproc_data(self, csv_file_name):
         return pd.read_csv(self.preproc_s.PROCESSED_DATA_DIR + csv_file_name, encoding = 'cp932')
 
-    # for debug
     def _calc_correlation(self, df_preproc):
         return df_preproc.corr(method='pearson')
 
