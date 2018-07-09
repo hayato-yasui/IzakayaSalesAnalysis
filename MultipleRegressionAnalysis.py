@@ -30,7 +30,6 @@ class MultipleRegressionAnalysis:
         self.preproc = Preprocess()
         self.postproc = Postprocess()
 
-
     def execute(self):
         preproc_csv_path = self._preprocess()
         # preproc_csv_path = ''
@@ -40,11 +39,11 @@ class MultipleRegressionAnalysis:
         self._create_prediction_model()
         self._postprocess()
 
-
     def _preprocess(self):
-        df_src = self.preproc.fetch_csv_data_and_convert_format_to_df(self.preproc_s.RAW_DATA_DIR,self.preproc_s.DATA_FILES_TO_FETCH)
+        df_src = self.preproc.fetch_csv_data_and_convert_format_to_df(self.preproc_s.RAW_DATA_DIR,
+                                                                      self.preproc_s.DATA_FILES_TO_FETCH)
         self.preproc.del_unnecessary_cols(df_src, self.preproc_s.UNNECESSARY_COLS)
-        df_src = self.preproc.replace_values(df_src,self.preproc_s.REPLACE_UNEXPECTED_VAL_TO_ALT_VAL,
+        df_src = self.preproc.replace_values(df_src, self.preproc_s.REPLACE_UNEXPECTED_VAL_TO_ALT_VAL,
                                              self.preproc_s.REPALCE_NAN_TO_ALT_VAL)
         df_src = self.preproc.divide_col(df_src, self.preproc_s.DIVIDE_NECESSARY_COLS)
         df_src = self.preproc.convert_dtype(df_src, self.preproc_s.CONVERT_DTYPE)
@@ -63,12 +62,12 @@ class MultipleRegressionAnalysis:
                                                                   self.preproc_s.TGT_STORE,
                                                                   self.preproc_s.TGT_PERIOD_FLOOR,
                                                                   self.preproc_s.TGT_PERIOD_TOP,
-                                                                  '_'+self.preproc_s.GROUPING_FILE_MEMO)
+                                                                  '_' + self.preproc_s.GROUPING_FILE_MEMO)
 
         return preproc_csv_file_name
 
     def _get_preproc_data(self, csv_file_name):
-        return pd.read_csv(self.preproc_s.PROCESSED_DATA_DIR + csv_file_name, encoding = 'cp932')
+        return pd.read_csv(self.preproc_s.PROCESSED_DATA_DIR + csv_file_name, encoding='cp932')
 
     # for debug
     def _calc_correlation(self, df_preproc):
@@ -83,7 +82,8 @@ class MultipleRegressionAnalysis:
     def _del_lower_corr_cols(self):
         # get columns that have high corr
         high_corr_cols_li = self.df_preproc.corr()[(self.df_preproc.corr()['価格'] >= self.mra_s.CORR_LIMIT) |
-                                                   (self.df_preproc.corr()['価格'] <= -self.mra_s.CORR_LIMIT)].index.values
+                                                   (self.df_preproc.corr()[
+                                                        '価格'] <= -self.mra_s.CORR_LIMIT)].index.values
         return self.df_preproc[high_corr_cols_li]
 
     def _normalization(self):
@@ -99,7 +99,7 @@ class MultipleRegressionAnalysis:
         Y = self.df_sales_high_corr['価格'].values
         return X, Y
 
-    def _create_model(self,X, Y):
+    def _create_model(self, X, Y):
         self.clf.fit(X, Y)
         # 偏回帰係数
         # print(pd.DataFrame({"Name": self.df_sales_high_corr.drop('売上', axis=1).columns,
