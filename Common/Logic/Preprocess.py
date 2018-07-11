@@ -66,11 +66,13 @@ class Preprocess:
         return df
 
     @staticmethod
-    def grouping(df, key_li, grouping_item_and_way_dict):
+    def grouping(df, key_li, grouping_item_and_way_dict,index_col= None):
         selected_cols = key_li + [k for k,v in grouping_item_and_way_dict.items()]
         df_selected =df[selected_cols]
         df_grouped_src = df_selected.groupby(key_li)
         df_grouped = df_grouped_src.agg(grouping_item_and_way_dict).reset_index()
+        if index_col is not None:
+            df_grouped = df_grouped.set_index(index_col)
         return df_grouped
 
     @staticmethod

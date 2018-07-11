@@ -36,6 +36,7 @@ class StoreCurrAnalysis:
         df_src = self.preproc.deal_missing_values(df_src)
         df_src = self.preproc.extract_data(df_src, self.preproc_s.TGT_STORE, self.preproc_s.TGT_PERIOD_FLOOR,
                                            self.preproc_s.TGT_PERIOD_TOP)
+        df_src = self.preproc.change_label_name(df_src)
         preproc_csv_file_name = self.preproc.create_proc_data_csv(df_src, self.preproc_s.PROCESSED_DATA_DIR,
                                                                   self.preproc_s.TGT_STORE,
                                                                   self.preproc_s.TGT_PERIOD_FLOOR,
@@ -49,21 +50,19 @@ class StoreCurrAnalysis:
 
     def _plot_store_curr_info(self):
         self.chart_cli.create_pie_chart(df=self.preproc.grouping(self.df_preproc,self.sca_s.GROUPING_KEY_ITEM_CATEGORY2,
-                                                                 self.sca_s.GROUPING_WAY),
-                                        axis=self.df_preproc[self.sca_s.PIE_CHART_SET[0]],
-                                        amount_col=self.df_preproc[self.sca_s.PIE_CHART_SET[0]])
+                                                                 self.sca_s.GROUPING_WAY,self.sca_s.PIE_CHART_SET[0]),
+                                        amount_col=self.sca_s.PIE_CHART_SET[1])
 
         # 時系列カラムをインデックスに指定する必要がある
-        self.chart_cli.time_series_graph(self.df_preproc,
-                                         amount_cols_li=self.df_preproc[self.sca_s.TIME_SERIES_GRAPH_MONTHLY])
-        self.chart_cli.time_series_graph(self.df_preproc,
-                                         amount_cols_li=self.df_preproc[self.sca_s.TIME_SERIES_GRAPH_DAYLY])
+        # self.chart_cli.time_series_graph(self.df_preproc,
+        #                                  amount_cols_li=self.df_preproc[self.sca_s.TIME_SERIES_GRAPH_MONTHLY])
+        # self.chart_cli.time_series_graph(self.df_preproc,
+        #                                  amount_cols_li=self.df_preproc[self.sca_s.TIME_SERIES_GRAPH_DAYLY])
+        #
 
-
-        self.chart_cli.savefig()
+        self.chart_cli.plotfig()
+        self.chart_cli.savefig(self.sca_s.OUTPUT_DIR+ self.sca_s.FIG_FILE_NAME)
         self.chart_cli.closefig()
-
-    def
 
 if __name__ == '__main__':
     sca = StoreCurrAnalysis()
