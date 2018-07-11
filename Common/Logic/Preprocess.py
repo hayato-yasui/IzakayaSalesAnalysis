@@ -67,15 +67,60 @@ class Preprocess:
 
     @staticmethod
     def grouping(df, key_li, grouping_item_and_way_dict):
-        all_cols = key_li + [k for k,v in grouping_item_and_way_dict.items()]
-        df =df[all_cols]
-        df_grouped_src = df.groupby(key_li)
+        selected_cols = key_li + [k for k,v in grouping_item_and_way_dict.items()]
+        df_selected =df[selected_cols]
+        df_grouped_src = df_selected.groupby(key_li)
         df_grouped = df_grouped_src.agg(grouping_item_and_way_dict).reset_index()
         return df_grouped
 
     @staticmethod
-    def tanspose_cols_and_rows(df, keys_li, tgt_cols_li,tmp_cols):
-        tmp_cols = tmp_cols + ['D.数量']
-        df = df[tmp_cols]
-        df_pivot = df.pivot_table(index=keys_li, columns=tgt_cols_li, values='D.数量', aggfunc=sum).fillna(0).astype('int').reset_index()
+    def tanspose_cols_and_rows(df, keys_li, tgt_cols_li,cocunt_col):
+        selected_cols = keys_li + tgt_cols_li +[cocunt_col]
+        df_selected = df[selected_cols]
+        df_pivot = df_selected.pivot_table(index=keys_li, columns=tgt_cols_li, values='D.数量', aggfunc=sum).\
+            fillna(0).astype('int').reset_index()
         return df_pivot
+
+    @staticmethod
+    def outlier_2s(df):
+        for i in range(len(df.columns)):
+            # 列を抽出する
+            col = df.iloc[:, i]
+
+            # 平均と標準偏差
+            average = np.mean(col)
+            sd = np.std(col)
+
+            # 外れ値の基準点
+            outlier_min = average - (sd) * 2
+            outlier_max = average + (sd) * 2
+
+            # 範囲から外れている値を除く
+            col[col < outlier_min] = None
+            col[col > outlier_max] = None
+
+        df.dropna(how='any', axis=0,inplace=True)
+        return df
+
+    @staticmethod
+    def outlier_iqr(df):
+
+        for i in range(len(df.columns)):
+            # 列を抽出する
+            col = df.iloc[:, i]
+
+            # 四分位数
+            q1 = col.describe()['25%']
+            q3 = col.describe()['75%']
+            iqr = q3 - q1  # 四分位範囲
+
+            # 外れ値の基準点
+            outlier_min = q1 - (iqr) * 1.5
+            outlier_max = q3 + (iqr) * 1.5
+
+            # 範囲から外れている値を除く
+            col[col < outlier_min] = None
+            col[col > outlier_max] = None
+
+        df.dropna(how='any', axis=0, inplace=True)
+        return df
