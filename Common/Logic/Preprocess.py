@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 class Preprocess:
 
     @staticmethod
-    def fetch_csv_data_and_convert_format_to_df(data_dir, file_names_li):
+    def fetch_csv_data_and_convert_format_to_df(data_dir,file_names_li):
         for idx, f in enumerate(file_names_li):
             if idx == 0:
                 df_src = pd.read_csv(data_dir + f, encoding='cp932')
@@ -53,30 +53,76 @@ class Preprocess:
         return output_csv_file_name
 
     @staticmethod
-    def replace_values(df, unexpected_val_dict, nan_val_dict):
-        [df[k].replace(v[0], v[1], inplace=True) for k, v in unexpected_val_dict.items()]
-        [df[k].fillna(v, inplace=True) for k, v in nan_val_dict.items()]
+    def replace_values(df,unexpected_val_dict,nan_val_dict):
+        [df[k].replace(v[0],v[1],inplace=True) for k, v in unexpected_val_dict.items()]
+        [df[k].fillna(v,inplace=True) for k,v in nan_val_dict.items()]
         return df
 
     @staticmethod
-    def convert_dtype(df, _dict):
+    def convert_dtype(df,_dict):
         # TODO Automation convert
         for k, v in _dict.items():
             df[k] = df[k].astype(v)
         return df
 
     @staticmethod
-    def grouping(df, key_li, grouping_item_and_way_dict):
-        all_cols = key_li + [k for k, v in grouping_item_and_way_dict.items()]
-        df = df[all_cols]
-        df_grouped_src = df.groupby(key_li)
+    def grouping(df, key_li, grouping_item_and_way_dict,index_col= None):
+        selected_cols = key_li + [k for k,v in grouping_item_and_way_dict.items()]
+        df_selected =df[selected_cols]
+        df_grouped_src = df_selected.groupby(key_li)
         df_grouped = df_grouped_src.agg(grouping_item_and_way_dict).reset_index()
+        if index_col is not None:
+            df_grouped = df_grouped.set_index(index_col)
         return df_grouped
 
     @staticmethod
-    def tanspose_cols_and_rows(df, keys_li, tgt_cols_li, tmp_cols):
-        tmp_cols = tmp_cols + ['D.数量']
-        df = df[tmp_cols]
-        df_pivot = df.pivot_table(index=keys_li, columns=tgt_cols_li, values='D.数量', aggfunc=sum).fillna(0).astype(
-            'int').reset_index()
+    def tanspose_cols_and_rows(df, keys_li, tgt_cols_li,cocunt_col):
+        selected_cols = keys_li + tgt_cols_li +[cocunt_col]
+        df_selected = df[selected_cols]
+        df_pivot = df_selected.pivot_table(index=keys_li, columns=tgt_cols_li, values='D.数量', aggfunc=sum).\
+            fillna(0).astype('int').reset_index()
         return df_pivot
+
+    @staticmethod
+    def outlier_2s(df):
+        for i in range(len(df.columns)):
+            # 列を抽出する
+            col = df.iloc[:, i]
+
+            # 平均と標準偏差
+            average = np.mean(col)
+            sd = np.std(col)
+
+            # 外れ値の基準点
+            outlier_min = average - (sd) * 2
+            outlier_max = average + (sd) * 2
+
+            # 範囲から外れている値を除く
+            col[col < outlier_min] = None
+            col[col > outlier_max] = None
+
+        df.dropna(how='any', axis=0,inplace=True)
+        return df
+
+    @staticmethod
+    def outlier_iqr(df):
+
+        for i in range(len(df.columns)):
+            # 列を抽出する
+            col = df.iloc[:, i]
+
+            # 四分位数
+            q1 = col.describe()['25%']
+            q3 = col.describe()['75%']
+            iqr = q3 - q1  # 四分位範囲
+
+            # 外れ値の基準点
+            outlier_min = q1 - (iqr) * 1.5
+            outlier_max = q3 + (iqr) * 1.5
+
+            # 範囲から外れている値を除く
+            col[col < outlier_min] = None
+            col[col > outlier_max] = None
+
+        df.dropna(how='any', axis=0, inplace=True)
+        return df
