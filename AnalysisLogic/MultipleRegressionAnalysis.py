@@ -52,7 +52,8 @@ class MultipleRegressionAnalysis:
         preproc_csv_file_name = self.preproc.create_proc_data_csv(df_src, self.preproc_s.PROCESSED_DATA_DIR,
                                                                   self.preproc_s.TGT_STORE,
                                                                   self.preproc_s.TGT_PERIOD_FLOOR,
-                                                                  self.preproc_s.TGT_PERIOD_TOP, memo='_before_grouping')
+                                                                  self.preproc_s.TGT_PERIOD_TOP,
+                                                                  memo='_before_grouping')
 
         # Do grouping though, no change df name due to being able to skip those process
         df_src = self.preproc.grouping(df_src, self.preproc_s.GROUPING_KEY_DOW, self.preproc_s.GROUPING_WAY)
