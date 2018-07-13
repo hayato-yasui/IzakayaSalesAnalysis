@@ -11,12 +11,12 @@ import matplotlib.pyplot as plt
 class Preprocess:
 
     @staticmethod
-    def fetch_csv_data_and_convert_format_to_df(data_dir,file_names_li):
+    def fetch_csv_and_create_df(data_dir, file_names_li):
         for idx, f in enumerate(file_names_li):
             if idx == 0:
-                df_src = pd.read_csv(data_dir + f, encoding='cp932')
+                df_src = pd.read_csv(data_dir + f, encoding='cp932',engine='python')
             else:
-                df_src = pd.concat([df_src, pd.read_csv(data_dir + f, encoding='cp932')])
+                df_src = pd.concat([df_src, pd.read_csv(data_dir + f, encoding='cp932',engine='python')])
         return df_src
 
     @staticmethod
@@ -126,3 +126,9 @@ class Preprocess:
 
         df.dropna(how='any', axis=0, inplace=True)
         return df
+
+    @staticmethod
+    # when 1st argument is ascending and 2nd is descending ,sort_ways_li is [True,False]
+    def sort_df(df, sort_cols_li, sort_ways_li):
+        return df.sort_values(sort_cols_li, ascending=sort_ways_li)
+

@@ -19,8 +19,9 @@ class ChartClient:
         df.plot(subplots=subplots)
 
     @staticmethod
-    def create_pie_chart(df, amount_col):
-        df.plot(kind='pie', y=amount_col)
+    def create_pie_chart(df, amount_col,sort_columns=False):
+        df.plot(kind='pie', y=amount_col,sort_columns=sort_columns)
+        # plt.title('円グラフ', size=16, fontproperties=fp)
 
     @staticmethod
     def time_series_graph(df,amount_cols_li, figsize=(16, 4), alpha = 0.5):

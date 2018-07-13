@@ -19,16 +19,17 @@ class ItemCorrAnalysis:
 
 
     def execute(self):
-        preproc_csv_path = self._preprocess()
-        # preproc_csv_path = ''
-        self.df_preproc = self._get_preproc_data(preproc_csv_path)
+        preproc_csv_file_name = self._preprocess()
+        # preproc_csv_file_name = ''
+        self.df_preproc = self.preproc.fetch_csv_and_create_df(self.preproc_s.PROCESSED_DATA_DIR
+                                                               , [preproc_csv_file_name])
         corr = self._calc_correlation(self.df_preproc)
         print(corr)
         self._plot_corr(corr)
 
     def _preprocess(self):
-        df_src = self.preproc.fetch_csv_data_and_convert_format_to_df(self.preproc_s.PROCESSED_DATA_DIR,
-                                                                      self.preproc_s.DATA_FILES_TO_FETCH)
+        df_src = self.preproc.fetch_csv_and_create_df(self.preproc_s.PROCESSED_DATA_DIR,
+                                                      self.preproc_s.DATA_FILES_TO_FETCH)
         df_src = self.preproc.divide_col(df_src, self.preproc_s.DIVIDE_NECESSARY_COLS)
         # df_src = self.preproc.grouping(df_src, self.preproc_s.GROUPING_KEY_DOW, self.preproc_s.GROUPING_WAY)
         df_src = self.preproc.tanspose_cols_and_rows(df_src, self.preproc_s.GROUPING_KEY_DAY_BILL_ORDER,
