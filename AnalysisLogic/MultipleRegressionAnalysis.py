@@ -32,16 +32,16 @@ class MultipleRegressionAnalysis:
     def execute(self):
         preproc_csv_file_name = self._preprocess()
         # preproc_csv_file_name = ''
-        self.df_preproc = self.preproc.fetch_csv_and_create_df(self.preproc_s.PROCESSED_DATA_DIR
-                                                               , [preproc_csv_file_name])
+        self.df_preproc = self.preproc.fetch_csv_and_create_src_df(self.preproc_s.PROCESSED_DATA_DIR
+                                                                   , [preproc_csv_file_name])
         corr = self._calc_correlation(self.df_preproc)
         print(corr)
         self._create_prediction_model()
         self._postprocess()
 
     def _preprocess(self):
-        df_src = self.preproc.fetch_csv_and_create_df(self.preproc_s.RAW_DATA_DIR,
-                                                      self.preproc_s.DATA_FILES_TO_FETCH)
+        df_src = self.preproc.fetch_csv_and_create_src_df(self.preproc_s.RAW_DATA_DIR,
+                                                          self.preproc_s.DATA_FILES_TO_FETCH)
         self.preproc.del_unnecessary_cols(df_src, self.preproc_s.UNNECESSARY_COLS)
         df_src = self.preproc.replace_values(df_src, self.preproc_s.REPLACE_UNEXPECTED_VAL_TO_ALT_VAL,
                                              self.preproc_s.REPALCE_NAN_TO_ALT_VAL)
