@@ -1,4 +1,5 @@
 import datetime
+import numpy as np
 
 class StoreCurrAnalysisSetting(object):
     PIE_CHART_SET = ['商品カテゴリ2','価格']
@@ -19,7 +20,7 @@ class PreprocessSetting(object):
     UNNECESSARY_COLS = ['親カテゴリ', 'H.合算先伝票番号', 'H.集計フラグ']
     DIVIDE_NECESSARY_COLS = ['D.商品']
 
-    REPLACE_UNEXPECTED_VAL_TO_ALT_VAL = {'D.数量': ['0:設定なし', 0], }
+    REPLACE_UNEXPECTED_VAL_TO_ALT_VAL = {'D.数量': ['0:設定なし', 0], 'D.オーダー日時':['1203:アルバイト１',np.nan]}
     REPALCE_NAN_TO_ALT_VAL = {'D.数量': 0, 'D.価格': 0, 'D.商品カテゴリ3': 'dummy', }
     CONVERT_DTYPE = {'D.数量': float, 'D.価格': float}
 

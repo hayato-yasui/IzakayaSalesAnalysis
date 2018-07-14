@@ -135,6 +135,8 @@ class Preprocess:
     @staticmethod
     def create_ord_time_col_from_enter_store(df):
         df = df [['D.オーダー日時','H.伝票発行日']]
+
+        bbb = df[df['D.オーダー日時']=='1203:アルバイト１']
         df.dropna(how='any',inplace=True)
         df['注文時間'] = pd.to_datetime(df['D.オーダー日時']) - pd.to_datetime(df['H.伝票発行日'])
         return df

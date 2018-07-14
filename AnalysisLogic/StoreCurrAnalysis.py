@@ -28,23 +28,23 @@ class StoreCurrAnalysis:
     def _preprocess(self):
         df_src = self.preproc.fetch_csv_and_create_src_df(self.preproc_s.RAW_DATA_DIR,
                                                           self.preproc_s.DATA_FILES_TO_FETCH)
-        aaa = self.preproc.create_ord_time_col_from_enter_store(df_src)
-        print(aaa['注文時間'])
+        # aaa = self.preproc.create_ord_time_col_from_enter_store(df_src)
+        # print(aaa['注文時間'])
 
-        # self.preproc.del_unnecessary_cols(df_src, self.preproc_s.UNNECESSARY_COLS)
-        # df_src = self.preproc.replace_values(df_src, self.preproc_s.REPLACE_UNEXPECTED_VAL_TO_ALT_VAL,
-        #                                      self.preproc_s.REPALCE_NAN_TO_ALT_VAL)
-        # df_src = self.preproc.divide_col(df_src, self.preproc_s.DIVIDE_NECESSARY_COLS)
-        # df_src = self.preproc.convert_dtype(df_src, self.preproc_s.CONVERT_DTYPE)
-        # df_src = self.preproc.deal_missing_values(df_src)
-        # df_src = self.preproc.extract_data(df_src, self.preproc_s.TGT_STORE, self.preproc_s.TGT_PERIOD_FLOOR,
-        #                                    self.preproc_s.TGT_PERIOD_TOP)
-        # df_src = self.preproc.change_label_name(df_src)
-        # preproc_csv_file_name = self.preproc.create_proc_data_csv(df_src, self.preproc_s.PROCESSED_DATA_DIR,
-        #                                                           self.preproc_s.TGT_STORE,
-        #                                                           self.preproc_s.TGT_PERIOD_FLOOR,
-        #                                                           self.preproc_s.TGT_PERIOD_TOP,
-        #                                                           memo=self.preproc_s.FILE_MEMO)
+        self.preproc.del_unnecessary_cols(df_src, self.preproc_s.UNNECESSARY_COLS)
+        df_src = self.preproc.replace_values(df_src, self.preproc_s.REPLACE_UNEXPECTED_VAL_TO_ALT_VAL,
+                                             self.preproc_s.REPALCE_NAN_TO_ALT_VAL)
+        df_src = self.preproc.divide_col(df_src, self.preproc_s.DIVIDE_NECESSARY_COLS)
+        df_src = self.preproc.convert_dtype(df_src, self.preproc_s.CONVERT_DTYPE)
+        df_src = self.preproc.deal_missing_values(df_src)
+        df_src = self.preproc.extract_data(df_src, self.preproc_s.TGT_STORE, self.preproc_s.TGT_PERIOD_FLOOR,
+                                           self.preproc_s.TGT_PERIOD_TOP)
+        df_src = self.preproc.change_label_name(df_src)
+        preproc_csv_file_name = self.preproc.create_proc_data_csv(df_src, self.preproc_s.PROCESSED_DATA_DIR,
+                                                                  self.preproc_s.TGT_STORE,
+                                                                  self.preproc_s.TGT_PERIOD_FLOOR,
+                                                                  self.preproc_s.TGT_PERIOD_TOP,
+                                                                  memo=self.preproc_s.FILE_MEMO)
 
         return preproc_csv_file_name
 
@@ -74,6 +74,7 @@ class StoreCurrAnalysis:
         df_grouped_by_category2 = self.preproc.sort_df(df_grouped_by_category2,['価格'],[False])
         # self.chart_cli.create_pie_chart(df_grouped_by_category2,amount_col=self.sca_s.PIE_CHART_SET[1])
         df_grouped_by_category2['売上比率'] = df_grouped_by_category2 / df_grouped_by_category2.sum()
+        df_grouped_by_category2.to_csv(self.sca_s.OUTPUT_DIR + '売上構成比＿サンプル.csv')
         print(df_grouped_by_category2)
         self.chart_cli.create_pie_chart(
             df=df_grouped_by_category2, amount_col=self.sca_s.PIE_CHART_SET[1])
