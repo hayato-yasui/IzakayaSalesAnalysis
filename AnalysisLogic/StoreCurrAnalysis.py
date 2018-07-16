@@ -65,7 +65,8 @@ class StoreCurrAnalysis:
         self._abc_analysis()
 
     def sales(self):
-        self.df_grouped_by_bill = self.df_preproc.groupby(self.gu.BILL).max().reset_index()
+        self.df_grouped_by_bill = self.df_preproc.groupby(self.gu.BILL).max().reset_index()\
+            .set_index(pd.DatetimeIndex(self.df_preproc['H.集計対象営業年月日']))
         self.df_grouped_by_month = self.df_grouped_by_bill[['H.集計対象営業年月日','H.伝票金額']]\
             .groupby(pd.Grouper(key='H.集計対象営業年月日',freq='M')).size()
 
