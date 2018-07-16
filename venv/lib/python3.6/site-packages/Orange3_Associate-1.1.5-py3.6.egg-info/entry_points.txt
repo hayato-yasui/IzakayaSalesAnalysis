@@ -1,0 +1,12 @@
+[orange.canvas.help]
+html-index = orangecontrib.associate.widgets:WIDGET_HELP_PATH
+
+[orange.widgets]
+Associate = orangecontrib.associate.widgets
+
+[orange.widgets.tutorials]
+
+
+[orange3.addon]
+associate = orangecontrib.associate
+

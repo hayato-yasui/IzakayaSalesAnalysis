@@ -3,9 +3,11 @@ import numpy as np
 import datetime
 import seaborn as sns
 import matplotlib.pyplot as plt
+from Common.Logic.ChartClient import ChartClient
 from Common.Logic.Preprocess import Preprocess
 from Common.Logic.Postprocess import Postprocess
 from Common.Setting.ItemCorrAnalysisSetting import *
+from Common.Setting.Common.PreprocessSetting import *
 
 
 # 商品間の相関係数算出クラス
@@ -13,9 +15,12 @@ class ItemCorrAnalysis:
 
     def __init__(self):
         self.preproc_s = PreprocessSetting()
-        self.aca_s = ItemCorrAnalysisSetting()
+        self.ica_s = ItemCorrAnalysisSetting()
         self.preproc = Preprocess()
         self.postproc = Postprocess()
+        self.chart_cli = ChartClient()
+        self.sc = SrcConversion()
+        self.gu = GroupingUnit()
 
 
     def execute(self):
@@ -28,11 +33,12 @@ class ItemCorrAnalysis:
         self._plot_corr(corr)
 
     def _preprocess(self):
-        df_src = self.preproc.fetch_csv_and_create_src_df(self.preproc_s.PROCESSED_DATA_DIR,
+        df_src = self.preproc.fetch_csv_and_create_src_df(self.preproc_s.RAW_DATA_DIR,
                                                           self.preproc_s.DATA_FILES_TO_FETCH)
+        df_src = self.preproc.convert_dtype(df_src, self.sc.CONVERT_DTYPE)
         df_src = self.preproc.divide_col(df_src, self.preproc_s.DIVIDE_NECESSARY_COLS)
         # df_src = self.preproc.grouping(df_src, self.preproc_s.GROUPING_KEY_DOW, self.preproc_s.GROUPING_WAY)
-        df_src = self.preproc.tanspose_cols_and_rows(df_src, self.preproc_s.GROUPING_KEY_DAY_BILL_ORDER,
+        df_src = self.preproc.tanspose_cols_and_rows(df_src, self.gu.DAY_BILL_ORDER,
                                                      self.preproc_s.TGT_TRANPOSE_C_AND_R_COL,
                                                      self.preproc_s.TRANPOSE_C_AND_R_COUNT_COL)
 
@@ -52,7 +58,7 @@ class ItemCorrAnalysis:
         return df_preproc.corr(method='pearson')
 
     def _plot_corr(self, df_corr):
-        df_corr = df_corr[(df_corr >= self.aca_s.CORR_LIMIT) | (df_corr <= -self.aca_s.CORR_LIMIT)]
+        df_corr = df_corr[(df_corr >= self.ica_s.CORR_LIMIT) | (df_corr <= -self.ica_s.CORR_LIMIT)]
         df_corr.replace(1, np.nan, inplace=True)
         df_corr.dropna(how='all', inplace=True)
         df_corr.dropna(how='all', axis=1, inplace=True)
@@ -62,7 +68,10 @@ class ItemCorrAnalysis:
                     xticklabels=df_corr.columns.values,
                     yticklabels=df_corr.columns.values
                     )
-        plt.show()
+        self.chart_cli.savefig(self.ica_s.OUTPUT_DIR,'商品間の相関係数.png')
+        # self.chart_cli.plotfig()
+        # self.chart_cli.closefig()
+
 
 
 if __name__ == '__main__':

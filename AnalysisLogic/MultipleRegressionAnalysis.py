@@ -7,9 +7,11 @@ from enum import Enum, IntEnum
 from sklearn import linear_model
 import matplotlib.pyplot as plt
 
+from Common.Logic.ChartClient import ChartClient
 from Common.Logic.Preprocess import Preprocess
 from Common.Logic.Postprocess import Postprocess
 from Common.Setting.MultipleRegressionAnalysis import *
+from Common.Setting.Common.PreprocessSetting import *
 
 
 # class PLAYER_ANSWER(Enum):
@@ -28,6 +30,9 @@ class MultipleRegressionAnalysis:
         self.mra_s = MultipleRegressionAnalysisSetting()
         self.preproc = Preprocess()
         self.postproc = Postprocess()
+        self.chart_cli = ChartClient()
+        self.sc = SrcConversion()
+        self.gu = GroupingUnit()
 
     def execute(self):
         preproc_csv_file_name = self._preprocess()
@@ -37,12 +42,13 @@ class MultipleRegressionAnalysis:
         corr = self._calc_correlation(self.df_preproc)
         print(corr)
         self._create_prediction_model()
-        self._postprocess()
+        # self._postprocess()
 
     def _preprocess(self):
         df_src = self.preproc.fetch_csv_and_create_src_df(self.preproc_s.RAW_DATA_DIR,
                                                           self.preproc_s.DATA_FILES_TO_FETCH)
         self.preproc.del_unnecessary_cols(df_src, self.preproc_s.UNNECESSARY_COLS)
+        df_src = self.preproc.convert_dtype(df_src, self.sc.CONVERT_DTYPE)
         df_src = self.preproc.replace_values(df_src, self.preproc_s.REPLACE_UNEXPECTED_VAL_TO_ALT_VAL,
                                              self.preproc_s.REPALCE_NAN_TO_ALT_VAL)
         df_src = self.preproc.divide_col(df_src, self.preproc_s.DIVIDE_NECESSARY_COLS)
@@ -57,7 +63,7 @@ class MultipleRegressionAnalysis:
                                                                   memo='_before_grouping')
 
         # Do grouping though, no change df name due to being able to skip those process
-        df_src = self.preproc.grouping(df_src, self.preproc_s.GROUPING_KEY_DOW, self.preproc_s.GROUPING_WAY)
+        df_src = self.preproc.grouping(df_src, self.gu.DOW, self.preproc_s.GROUPING_WAY)
         df_src = self.preproc.change_label_name(df_src)
         preproc_csv_file_name = self.preproc.create_proc_data_csv(df_src, self.preproc_s.PROCESSED_DATA_DIR,
                                                                   self.preproc_s.TGT_STORE,
@@ -115,7 +121,9 @@ class MultipleRegressionAnalysis:
 
         # 回帰直線
         plt.plot(X, self.clf.predict(X))
-        # plt.show()
+        self.chart_cli.savefig(self.mra_s.OUTPUT_DIR,'サンプル.png')
+        self.chart_cli.plotfig()
+
 
 
 if __name__ == '__main__':
