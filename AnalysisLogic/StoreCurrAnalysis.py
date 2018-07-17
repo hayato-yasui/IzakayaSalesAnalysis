@@ -29,7 +29,7 @@ class StoreCurrAnalysis:
         store_li = ['大和乃山賊', '定楽屋', 'うおにく', 'かこい屋', 'くつろぎ屋', 'ご馳走屋名駅店', 'ご馳走屋金山店',
                      '九州乃山賊小倉総本店', '和古屋', '楽屋','鳥Bouno!', 'ぐるめ屋']
         for s in store_li:
-            self.preproc_s.TGT_STORE = s
+            self.sca_s.TGT_STORE = s
             preproc_csv_file_name = self._preprocess()
             # preproc_csv_file_name = ''
             self.df_preproc = self.preproc.fetch_csv_and_create_src_df(self.preproc_s.PROCESSED_DATA_DIR
@@ -96,8 +96,18 @@ class StoreCurrAnalysis:
 
     def _abc_analysis(self):
         self.sales_by_category2()
-        self.customer()
-        self.residence_time()
+        self.sales_and_ratio_by_key(["客構成"])
+        self.sales_and_ratio_by_key(["滞在時間"])
+
+    def sales_and_ratio_by_key(self, key_li):
+        df_grouped = self.df_grouped_by_bill.groupby(key_li)
+        df_sales_by_key = df_grouped.agg({'D.価格': np.sum})
+        df_sales_by_key['売上比率'] = df_sales_by_key / df_sales_by_key.sum()
+        s_count_by_key = df_grouped.size()
+        s_count_by_key.name = 'count_' + '_'.join(key_li)
+        s_ratio_by_key = pd.Series(s_count_by_key / s_count_by_key.sum(), name='ratio_' + '_'.join(key_li))
+        self.util.df_to_csv(pd.concat([df_sales_by_key, s_count_by_key, s_ratio_by_key], axis=1),
+                            self.sca_s.OUTPUT_DIR, 'ABC分析_' + '_'.join(key_li) + '.csv', index=True)
 
 
     def sales_by_category2(self):
@@ -112,28 +122,29 @@ class StoreCurrAnalysis:
         self.chart_cli.savefig(self.sca_s.OUTPUT_DIR, 'ABC分析_売上構成比.png')
         # self.chart_cli.plotfig()
 
-    def customer(self):
-        df_grouped_by_customer = self.df_grouped_by_bill.groupby(['客構成'])
-        df_sales_by_customer = df_grouped_by_customer.agg({'D.価格': np.sum})
-        df_sales_by_customer['売上比率'] = df_sales_by_customer / df_sales_by_customer.sum()
-        s_count_by_customer.name = 'count_customer'
-        s_count_by_customer.sort_values(ascending=False,inplace=True)
-        s_ratio = pd.Series(s_count_by_customer / s_count_by_customer.sum(), name='ratio_customer')
-        self.util.df_to_csv(pd.concat([df_sales_by_customer,s_count_by_customer, s_ratio], axis=1),
-                            self.sca_s.OUTPUT_DIR, 'ABC分析_客構成比.csv', index=True)
-
-    def residence_time(self):
-        df_grouped_by_residence_time = self.df_grouped_by_bill.groupby(['滞在時間'])
-        df_sales_by_residence_time = df_grouped_by_residence_time.agg({'D.価格': np.sum})
-        df_sales_by_residence_time['売上比率'] = df_sales_by_residence_time / df_sales_by_residence_time.sum()
-        s_count_by_residence_time = df_grouped_by_residence_time.size()
-        s_count_by_residence_time.name = 'count_residence_time'
-        s_ratio = pd.Series(s_count_by_residence_time / s_count_by_residence_time.sum(), name='ratio_residence_time')
-        self.util.df_to_csv(pd.concat([s_count_by_residence_time, s_ratio, df_sales_by_residence_time], axis=1),
-                            self.sca_s.OUTPUT_DIR, 'ABC分析_滞在時間成比.csv',
-                            index=True)
+    # def customer(self):
+    #     df_grouped_by_customer = self.df_grouped_by_bill.groupby(['客構成'])
+    #     df_sales_by_customer = df_grouped_by_customer.agg({'D.価格': np.sum})
+    #     df_sales_by_customer['売上比率'] = df_sales_by_customer / df_sales_by_customer.sum()
+    #     s_count_by_customer = df_grouped_by_customer.size()
+    #     s_count_by_customer.name = 'count_customer'
+    #     s_ratio = pd.Series(s_count_by_customer / s_count_by_customer.sum(), name='ratio_customer')
+    #     self.util.df_to_csv(pd.concat([df_sales_by_customer,s_count_by_customer, s_ratio], axis=1),
+    #                         self.sca_s.OUTPUT_DIR, 'ABC分析_客構成比.csv', index=True)
+    #
+    # def residence_time(self):
+    #     df_grouped_by_residence_time = self.df_grouped_by_bill.groupby(['滞在時間'])
+    #     df_sales_by_residence_time = df_grouped_by_residence_time.agg({'D.価格': np.sum})
+    #     df_sales_by_residence_time['売上比率'] = df_sales_by_residence_time / df_sales_by_residence_time.sum()
+    #     s_count_by_residence_time = df_grouped_by_residence_time.size()
+    #     s_count_by_residence_time.name = 'count_residence_time'
+    #     s_ratio = pd.Series(s_count_by_residence_time / s_count_by_residence_time.sum(), name='ratio_residence_time')
+    #     self.util.df_to_csv(pd.concat([s_count_by_residence_time, s_ratio, df_sales_by_residence_time], axis=1),
+    #                         self.sca_s.OUTPUT_DIR, 'ABC分析_滞在時間成比.csv',
+    #                         index=True)
 
 
 if __name__ == '__main__':
     sca = StoreCurrAnalysis()
     sca.execute()
+    print("END")
