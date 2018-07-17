@@ -29,8 +29,13 @@ class StoreCurrAnalysis:
         store_li = ['大和乃山賊', '定楽屋', 'うおにく', 'かこい屋', 'くつろぎ屋', 'ご馳走屋名駅店', 'ご馳走屋金山店',
                      '九州乃山賊小倉総本店', '和古屋', '楽屋','鳥Bouno!', 'ぐるめ屋']
         for s in store_li:
-            self.sca_s.TGT_STORE = s
+            self.sca_s.TGT_STORE = self.preproc_s.TGT_STORE = s
+            self.sca_s.OUTPUT_DIR = './data/OUTPUT/' + self.sca_s.TGT_STORE + '/'
+            self.preproc_s.DATA_FILES_TO_FETCH = ['売上データ詳細_' + TGT_STORE + '_20180401-0630.csv', ]
+            self.preproc_s.PROCESSED_DATA_DIR = './data/Input/processed_data/' + TGT_STORE + '/'
+
             preproc_csv_file_name = self._preprocess()
+
             # preproc_csv_file_name = ''
             self.df_preproc = self.preproc.fetch_csv_and_create_src_df(self.preproc_s.PROCESSED_DATA_DIR
                                                                        , [preproc_csv_file_name])
