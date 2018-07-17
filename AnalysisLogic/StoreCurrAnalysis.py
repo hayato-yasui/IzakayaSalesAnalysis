@@ -108,19 +108,21 @@ class StoreCurrAnalysis:
         # self.chart_cli.plotfig()
 
     def customer(self):
-        self.df_grouped_by_customer = self.df_grouped_by_bill.groupby(['客構成']).size()
+        s_count_by_customer = self.df_grouped_by_bill.groupby(['客構成']).size()
+        # df_grouped_by_customer = self.df_grouped_by_bill.groupby('客構成').agg({'D.価格': [np.sum, "count"]
+        s_count_by_customer.name = 'count'
         # self.df_grouped_by_customer =  self.preproc.sort_df( self.df_grouped_by_customer,['客構成'],[False])
-        self.df_grouped_by_customer.sort_values(ascending=False,inplace=True)
-        self.df_grouped_by_customer['客構成比'] = self.df_grouped_by_customer / self.df_grouped_by_customer.sum()
-        self.util.df_to_csv(self.df_grouped_by_customer,self.sca_s.OUTPUT_DIR,'ABC分析_客構成比.csv',index=True)
+        s_count_by_customer.sort_values(ascending=False,inplace=True)
+        s_ratio= pd.Series(s_count_by_customer / s_count_by_customer.sum(),name='ratio')
+        self.util.df_to_csv(pd.concat([s_count_by_customer,s_ratio], axis=1),self.sca_s.OUTPUT_DIR,'ABC分析_客構成比.csv',index=True)
 
     def residence_time(self):
-        self.df_grouped_by_residence_time = self.df_grouped_by_bill.groupby(['滞在時間']).size()
-        self.df_grouped_by_residence_time.sort_values(ascending=False,inplace=True)
-        self.df_grouped_by_residence_time['滞在時間構成'] = self.df_grouped_by_residence_time / self.df_grouped_by_residence_time.sum()
-        self.util.df_to_csv(self.df_grouped_by_residence_time,self.sca_s.OUTPUT_DIR,'ABC分析_滞在時間構成_20分間隔.csv',index=True)
-
-
+        s_count_by_residence_time = self.df_grouped_by_bill.groupby(['滞在時間']).size()
+        s_count_by_residence_time.name = 'count'
+        s_count_by_residence_time.sort_values(ascending=False,inplace=True)
+        s_ratio = pd.Series(s_count_by_residence_time / s_count_by_residence_time.sum(), name='ratio')
+        self.util.df_to_csv(pd.concat([s_count_by_residence_time, s_ratio], axis=1), self.sca_s.OUTPUT_DIR, 'ABC分析_滞在時間成比.csv',
+                            index=True)
 
 
 if __name__ == '__main__':
