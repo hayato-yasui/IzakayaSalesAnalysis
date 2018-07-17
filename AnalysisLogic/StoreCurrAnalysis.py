@@ -26,14 +26,19 @@ class StoreCurrAnalysis:
         self.util = Util()
 
     def execute(self):
-        preproc_csv_file_name = self._preprocess()
-        # preproc_csv_file_name = ''
-        self.df_preproc = self.preproc.fetch_csv_and_create_src_df(self.preproc_s.PROCESSED_DATA_DIR
-                                                                   , [preproc_csv_file_name])
-        # df_grouped_src = self.df_preproc.groupby(self.cols).mean().reset_index()
-        # aaa = df_grouped_src[self.cols]
-        # self.util.df_to_csv(aaa, self.sca_s.OUTPUT_DIR, '大和乃山賊＿サンプル.csv')
-        self._plot_store_curr_info()
+        TGT_STORE = ['大和乃山賊', '定楽屋', 'うおにく', 'かこい屋', 'くつろぎ屋', 'ご馳走屋名駅店', 'ご馳走屋金山店',
+                     '九州乃山賊小倉総本店', '和古屋', '楽屋','鳥Bouno!', 'ぐるめ屋']
+        for s in TGT_STORE:
+            self.preproc_s.TGT_STORE = s
+            preproc_csv_file_name = self._preprocess()
+            # preproc_csv_file_name = ''
+            self.df_preproc = self.preproc.fetch_csv_and_create_src_df(self.preproc_s.PROCESSED_DATA_DIR
+                                                                       , [preproc_csv_file_name])
+            # df_grouped_src = self.df_preproc.groupby(self.cols).mean().reset_index()
+            # aaa = df_grouped_src[self.cols]
+            # self.util.df_to_csv(aaa, self.sca_s.OUTPUT_DIR, '大和乃山賊＿サンプル.csv')
+            self._plot_store_curr_info()
+            print(s + " is finish")
 
     def _preprocess(self):
         df_src = self.preproc.fetch_csv_and_create_src_df(self.preproc_s.RAW_DATA_DIR,
@@ -108,20 +113,26 @@ class StoreCurrAnalysis:
         # self.chart_cli.plotfig()
 
     def customer(self):
-        s_count_by_customer = self.df_grouped_by_bill.groupby(['客構成']).size()
-        # df_grouped_by_customer = self.df_grouped_by_bill.groupby('客構成').agg({'D.価格': [np.sum, "count"]
-        s_count_by_customer.name = 'count'
-        # self.df_grouped_by_customer =  self.preproc.sort_df( self.df_grouped_by_customer,['客構成'],[False])
+        df_grouped_by_customer = self.df_grouped_by_bill.groupby(['客構成'])
+        df_sales_by_customer = df_grouped_by_customer.agg({'D.価格': np.sum})
+        df_sales_by_customer['売上比率'] = df_sales_by_customer / df_sales_by_customer.sum()
+        s_count_by_customer = df_grouped_by_customer.size()
+        s_count_by_customer.name = 'count_customer'
         s_count_by_customer.sort_values(ascending=False,inplace=True)
-        s_ratio= pd.Series(s_count_by_customer / s_count_by_customer.sum(),name='ratio')
-        self.util.df_to_csv(pd.concat([s_count_by_customer,s_ratio], axis=1),self.sca_s.OUTPUT_DIR,'ABC分析_客構成比.csv',index=True)
+        s_ratio = pd.Series(s_count_by_customer / s_count_by_customer.sum(), name='ratio_customer')
+        self.util.df_to_csv(pd.concat([s_count_by_customer, s_ratio, df_sales_by_customer], axis=1),
+                            self.sca_s.OUTPUT_DIR, 'ABC分析_客構成比.csv', index=True)
 
     def residence_time(self):
-        s_count_by_residence_time = self.df_grouped_by_bill.groupby(['滞在時間']).size()
-        s_count_by_residence_time.name = 'count'
+        df_grouped_by_residence_time = self.df_grouped_by_bill.groupby(['滞在時間'])
+        df_sales_by_residence_time = df_grouped_by_residence_time.agg({'D.価格': np.sum})
+        df_sales_by_residence_time['売上比率'] = df_sales_by_residence_time / df_sales_by_residence_time.sum()
+        s_count_by_residence_time = df_grouped_by_residence_time.size()
+        s_count_by_residence_time.name = 'count_residence_time'
         s_count_by_residence_time.sort_values(ascending=False,inplace=True)
-        s_ratio = pd.Series(s_count_by_residence_time / s_count_by_residence_time.sum(), name='ratio')
-        self.util.df_to_csv(pd.concat([s_count_by_residence_time, s_ratio], axis=1), self.sca_s.OUTPUT_DIR, 'ABC分析_滞在時間成比.csv',
+        s_ratio = pd.Series(s_count_by_residence_time / s_count_by_residence_time.sum(), name='ratio_residence_time')
+        self.util.df_to_csv(pd.concat([s_count_by_residence_time, s_ratio, df_sales_by_residence_time], axis=1),
+                            self.sca_s.OUTPUT_DIR, 'ABC分析_滞在時間成比.csv',
                             index=True)
 
 
