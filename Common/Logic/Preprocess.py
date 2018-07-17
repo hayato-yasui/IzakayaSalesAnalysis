@@ -49,11 +49,11 @@ class Preprocess:
         return df
 
     @staticmethod
-    def create_proc_data_csv(df, proc_data_dir, tgt_store, tgt_period_floor, tgt_period_top, memo=''):
+    def create_proc_data_csv(df, proc_data_dir, tgt_store, tgt_period_floor, tgt_period_top, memo='',index=False):
         output_csv_file_name = tgt_store + str(tgt_period_floor) + '-' + str(tgt_period_top) + memo + '.csv'
         if not os.path.exists(proc_data_dir):
             os.mkdir(proc_data_dir)
-        df.to_csv(proc_data_dir + output_csv_file_name, index=False, encoding='cp932')
+        df.to_csv(proc_data_dir + output_csv_file_name, index=index, encoding='cp932')
         return output_csv_file_name
 
     @staticmethod

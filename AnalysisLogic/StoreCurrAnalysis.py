@@ -65,16 +65,13 @@ class StoreCurrAnalysis:
         self._abc_analysis()
 
     def sales(self):
-        self.df_grouped_by_bill = self.df_preproc.groupby(self.gu.BILL).max().reset_index()\
-            .set_index(pd.DatetimeIndex(self.df_preproc['H.集計対象営業年月日']))
-        self.df_grouped_by_month = self.df_grouped_by_bill[['H.集計対象営業年月日','H.伝票金額']]\
-            .groupby(pd.Grouper(key='H.集計対象営業年月日',freq='M')).size()
-
-        # self.df_grouped_by_month = self.df_grouped_by_bill.groupby(pd.Grouper(freq='M')).sum()
-        self.df_grouped_by_month = self.df_grouped_by_month + self.df_grouped_by_month.sum()
-        pd.concat([self.df_grouped_by_month, self.df_grouped_by_month.sum()])
-
-        print(self.df_grouped_by_month)
+        self.df_grouped_by_bill = self.df_preproc.groupby(self.gu.BILL).max().reset_index()
+        self.df_grouped_by_bill = self.df_grouped_by_bill.set_index(
+            pd.DatetimeIndex(self.df_grouped_by_bill['H.集計対象営業年月日']))
+        self.df_grouped_by_month = self.df_grouped_by_bill.groupby([
+            self.df_grouped_by_bill.index.year, self.df_grouped_by_bill.index.month])['H.伝票金額'].sum()
+        total_sales = self.df_grouped_by_month.sum()
+        self.util.df_to_csv(self.df_grouped_by_month,self.sca_s.OUTPUT_DIR,'月間売上.csv',index=True)
 
         # self.chart_cli.create_pie_chart(
         #     df=self.preproc.grouping(self.df_preproc, self.sca_s.GROUPING_KEY_ITEM_CATEGORY2,
@@ -111,14 +108,17 @@ class StoreCurrAnalysis:
         # self.chart_cli.plotfig()
 
     def customer(self):
-        self.df_grouped_by_bill = self.df_grouped_by_bill[['客構成']].reset_index(drop=True)
         self.df_grouped_by_customer = self.df_grouped_by_bill.groupby(['客構成']).size()
-        print(self.df_grouped_by_customer)
+        # self.df_grouped_by_customer =  self.preproc.sort_df( self.df_grouped_by_customer,['客構成'],[False])
+        self.df_grouped_by_customer.sort_values(ascending=False,inplace=True)
+        self.df_grouped_by_customer['客構成比'] = self.df_grouped_by_customer / self.df_grouped_by_customer.sum()
+        self.util.df_to_csv(self.df_grouped_by_customer,self.sca_s.OUTPUT_DIR,'ABC分析_客構成比.csv',index=True)
 
     def residence_time(self):
-        self.df_grouped_by_bill = self.df_grouped_by_bill[['滞在時間']].reset_index(drop=True)
         self.df_grouped_by_residence_time = self.df_grouped_by_bill.groupby(['滞在時間']).size()
-        print(self.df_grouped_by_residence_time)
+        self.df_grouped_by_residence_time.sort_values(ascending=False,inplace=True)
+        self.df_grouped_by_residence_time['滞在時間構成'] = self.df_grouped_by_residence_time / self.df_grouped_by_residence_time.sum()
+        self.util.df_to_csv(self.df_grouped_by_residence_time,self.sca_s.OUTPUT_DIR,'ABC分析_滞在時間構成_20分間隔.csv',index=True)
 
 
 

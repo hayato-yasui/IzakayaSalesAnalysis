@@ -4,8 +4,8 @@ import numpy as np
 TGT_PERIOD_FLOOR = datetime.date(2018, 4, 1)
 TGT_PERIOD_TOP = datetime.date(2018, 6, 30)
 
-TGT_STORE = '大和乃山賊'
-# TGT_STORE = '定楽屋'
+# TGT_STORE = '大和乃山賊'
+TGT_STORE = '定楽屋'
 # TGT_STORE = 'うおにく'
 # TGT_STORE = 'かこい屋'
 # TGT_STORE = 'くつろぎ屋'
@@ -23,9 +23,9 @@ class StoreCurrAnalysisSetting(object):
     TGT_PERIOD_FLOOR = TGT_PERIOD_FLOOR
     TGT_PERIOD_TOP = TGT_PERIOD_TOP
     OUTPUT_DIR = './data/OUTPUT/' + TGT_STORE + '/'
-    PIE_CHART_SET = ['商品カテゴリ2', '価格']
+    PIE_CHART_SET = ['D.商品カテゴリ2', 'D.価格']
 
-    GROUPING_WAY = {'価格': "sum"}
+    GROUPING_WAY = {'D.価格': "sum"}
 
     TIME_SERIES_GRAPH_MONTHLY = ['売上', '来店総数']
     TIME_SERIES_GRAPH_DAYLY = ['売上', '来店総数']
