@@ -26,9 +26,9 @@ class StoreCurrAnalysis:
         self.util = Util()
 
     def execute(self):
-        TGT_STORE = ['大和乃山賊', '定楽屋', 'うおにく', 'かこい屋', 'くつろぎ屋', 'ご馳走屋名駅店', 'ご馳走屋金山店',
+        store_li = ['大和乃山賊', '定楽屋', 'うおにく', 'かこい屋', 'くつろぎ屋', 'ご馳走屋名駅店', 'ご馳走屋金山店',
                      '九州乃山賊小倉総本店', '和古屋', '楽屋','鳥Bouno!', 'ぐるめ屋']
-        for s in TGT_STORE:
+        for s in store_li:
             self.preproc_s.TGT_STORE = s
             preproc_csv_file_name = self._preprocess()
             # preproc_csv_file_name = ''
@@ -55,7 +55,7 @@ class StoreCurrAnalysis:
         df_src = self.preproc.create_col_from_src_2cols(df_src, 'D.オーダー日時', 'H.伝票発行日', '注文時間')
         df_src = self.preproc.create_col_from_src_2cols(df_src, 'H.伝票処理日', 'H.伝票発行日', '滞在時間')
         df_src['滞在時間'] = df_src['滞在時間'].dt.round('20min')
-        df_src['客構成'] = "男-" + df_src['H.客数（男）'].astype(str) + '人,女-' + df_src['H.客数（女）'].astype(str) + '人'
+        df_src['客構成'] = "男 : " + df_src['H.客数（男）'].astype(str) + '人, 女 : ' + df_src['H.客数（女）'].astype(str) + '人'
         # df_src = self.preproc.change_label_name(df_src)
         preproc_csv_file_name = self.preproc.create_proc_data_csv(df_src, self.preproc_s.PROCESSED_DATA_DIR,
                                                                   self.preproc_s.TGT_STORE,
@@ -116,11 +116,10 @@ class StoreCurrAnalysis:
         df_grouped_by_customer = self.df_grouped_by_bill.groupby(['客構成'])
         df_sales_by_customer = df_grouped_by_customer.agg({'D.価格': np.sum})
         df_sales_by_customer['売上比率'] = df_sales_by_customer / df_sales_by_customer.sum()
-        s_count_by_customer = df_grouped_by_customer.size()
         s_count_by_customer.name = 'count_customer'
         s_count_by_customer.sort_values(ascending=False,inplace=True)
         s_ratio = pd.Series(s_count_by_customer / s_count_by_customer.sum(), name='ratio_customer')
-        self.util.df_to_csv(pd.concat([s_count_by_customer, s_ratio, df_sales_by_customer], axis=1),
+        self.util.df_to_csv(pd.concat([df_sales_by_customer,s_count_by_customer, s_ratio], axis=1),
                             self.sca_s.OUTPUT_DIR, 'ABC分析_客構成比.csv', index=True)
 
     def residence_time(self):
@@ -129,7 +128,6 @@ class StoreCurrAnalysis:
         df_sales_by_residence_time['売上比率'] = df_sales_by_residence_time / df_sales_by_residence_time.sum()
         s_count_by_residence_time = df_grouped_by_residence_time.size()
         s_count_by_residence_time.name = 'count_residence_time'
-        s_count_by_residence_time.sort_values(ascending=False,inplace=True)
         s_ratio = pd.Series(s_count_by_residence_time / s_count_by_residence_time.sum(), name='ratio_residence_time')
         self.util.df_to_csv(pd.concat([s_count_by_residence_time, s_ratio, df_sales_by_residence_time], axis=1),
                             self.sca_s.OUTPUT_DIR, 'ABC分析_滞在時間成比.csv',
