@@ -50,7 +50,7 @@ class MultipleRegressionAnalysis:
         self.preproc.del_unnecessary_cols(df_src, self.preproc_s.UNNECESSARY_COLS)
         df_src = self.preproc.convert_dtype(df_src, self.sc.CONVERT_DTYPE)
         df_src = self.preproc.replace_values(df_src, self.preproc_s.REPLACE_UNEXPECTED_VAL_TO_ALT_VAL,
-                                             self.preproc_s.REPALCE_NAN_TO_ALT_VAL)
+                                             self.preproc_s.REPLACE_NAN_TO_ALT_VAL)
         df_src = self.preproc.divide_col(df_src, self.preproc_s.DIVIDE_NECESSARY_COLS)
         df_src = self.preproc.convert_dtype(df_src, self.preproc_s.CONVERT_DTYPE)
         df_src = self.preproc.deal_missing_values(df_src)
