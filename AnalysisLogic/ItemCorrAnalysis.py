@@ -33,16 +33,13 @@ class ItemCorrAnalysis:
         self._plot_corr(corr)
 
     def _preprocess(self):
-        df_src = self.preproc.fetch_csv_and_create_src_df(self.preproc_s.RAW_DATA_DIR,
-                                                          self.preproc_s.DATA_FILES_TO_FETCH)
-        df_src = self.preproc.convert_dtype(df_src, self.sc.CONVERT_DTYPE)
-        df_src = self.preproc.divide_col(df_src, self.preproc_s.DIVIDE_NECESSARY_COLS)
+        df_src = self.preproc.common_proc(self.preproc_s)
+
         # df_src = self.preproc.grouping(df_src, self.preproc_s.GROUPING_KEY_DOW, self.preproc_s.GROUPING_WAY)
         df_src = self.preproc.tanspose_cols_and_rows(df_src, self.gu.DAY_BILL_ORDER,
                                                      self.preproc_s.TGT_TRANPOSE_C_AND_R_COL,
                                                      self.preproc_s.TRANPOSE_C_AND_R_COUNT_COL)
 
-        df_src = self.preproc.change_label_name(df_src)
         preproc_csv_file_name = self.preproc.create_proc_data_csv(df_src, self.preproc_s.PROCESSED_DATA_DIR,
                                                                   self.preproc_s.TGT_STORE,
                                                                   self.preproc_s.TGT_PERIOD_FLOOR,

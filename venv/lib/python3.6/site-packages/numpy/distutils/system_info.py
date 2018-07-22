@@ -1876,7 +1876,7 @@ class openblas_lapack_info(openblas_info):
         c = customized_ccompiler()
 
         tmpdir = tempfile.mkdtemp()
-        s = """void zungqr_();
+        s = """void zungqr();
         int main(int argc, const char *argv[])
         {
             zungqr_();

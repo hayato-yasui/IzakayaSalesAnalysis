@@ -427,10 +427,7 @@ def to_writeable(source):
     is_mapping = (hasattr(source, 'keys') and hasattr(source, 'values') and
                   hasattr(source, 'items'))
     # Objects that don't implement mappings, but do have dicts
-    if isinstance(source, np.generic):
-        # Numpy scalars are never mappings (pypy issue workaround)
-        pass
-    elif not is_mapping and hasattr(source, '__dict__'):
+    if not is_mapping and hasattr(source, '__dict__'):
         source = dict((key, value) for key, value in source.__dict__.items()
                       if not key.startswith('_'))
         is_mapping = True
@@ -440,7 +437,7 @@ def to_writeable(source):
         for field, value in source.items():
             if (isinstance(field, string_types) and
                     field[0] not in '_0123456789'):
-                dtype.append((str(field), object))
+                dtype.append((field, object))
                 values.append(value)
         if dtype:
             return np.array([tuple(values)], dtype)

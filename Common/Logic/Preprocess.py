@@ -6,9 +6,37 @@ import datetime
 from enum import Enum, IntEnum
 from sklearn import linear_model
 import matplotlib.pyplot as plt
+import math
+
+from Common.Setting.Common.PreprocessSetting import *
 
 
 class Preprocess:
+    sc = SrcConversion()
+
+    def common_proc(self, setting):
+        df = self.fetch_csv_and_create_src_df(setting.RAW_DATA_DIR, setting.DATA_FILES_TO_FETCH)
+        # df = self.extract_data(df)
+
+        # Data cleansing and convert data-type
+        self.specific_data_correction(df)
+        self.del_unnecessary_cols(df, self.sc.UNNECESSARY_COLS_FOR_ALL_ANALYSIS)
+        df = self.convert_dtype(df, self.sc.CONVERT_DTYPE)
+        df = self.divide_col(df, self.sc.DIVIDE_NECESSARY_COLS)
+        df = self.replace_values(df, self.sc.REPLACE_UNEXPECTED_VAL_TO_ALT_VAL,
+                                             self.sc.REPLACE_NAN_TO_ALT_VAL)
+
+        # df = self.deal_missing_values(df)
+        # df = self.change_label_name(df)
+
+
+        # Create new cols
+        df = self.create_col_from_src_2cols(df, 'D.オーダー日時', 'H.伝票発行日', '注文時間')
+        df = self.create_col_from_src_2cols(df, 'H.伝票処理日', 'H.伝票発行日', '滞在時間')
+        df['客構成'] = self.create_cstm_strctr(df)
+        df['男性比率'] = self.create_cstm_ratio(df)
+
+        return df
 
     @staticmethod
     def fetch_csv_and_create_src_df(data_dir, file_names_li):
@@ -21,7 +49,7 @@ class Preprocess:
 
     @staticmethod
     def del_unnecessary_cols(df, unnecessary_cols):
-        df.drop(columns=unnecessary_cols, axis=1, inplace=True)
+        return df.drop(columns=unnecessary_cols, axis=1, inplace=True)
 
     @staticmethod
     def divide_col(df, divide_necessary_cols):
@@ -49,7 +77,7 @@ class Preprocess:
         return df
 
     @staticmethod
-    def create_proc_data_csv(df, proc_data_dir, tgt_store, tgt_period_floor, tgt_period_top, memo='',index=False):
+    def create_proc_data_csv(df, proc_data_dir, tgt_store, tgt_period_floor, tgt_period_top, memo='', index=False):
         output_csv_file_name = tgt_store + str(tgt_period_floor) + '-' + str(tgt_period_top) + memo + '.csv'
         if not os.path.exists(proc_data_dir):
             os.mkdir(proc_data_dir)
@@ -74,6 +102,7 @@ class Preprocess:
                 df[k] = df[k].astype(v)
         return df
 
+
     @staticmethod
     def grouping(df, key_li, grouping_item_and_way_dict, index_col=None):
         selected_cols = key_li + [k for k, v in grouping_item_and_way_dict.items()]
@@ -86,8 +115,7 @@ class Preprocess:
 
     @staticmethod
     def tanspose_cols_and_rows(df, keys_li, tgt_cols_li, count_col):
-        selected_cols = keys_li + tgt_cols_li + [count_col]
-        df_selected = df[selected_cols]
+        df_selected = df[keys_li + tgt_cols_li + [count_col]]
         df_pivot = df_selected.pivot_table(index=keys_li, columns=tgt_cols_li, values='D.数量', aggfunc=sum). \
             fillna(0).astype("int").reset_index()
         return df_pivot
@@ -160,9 +188,33 @@ class Preprocess:
         return df
 
     @staticmethod
+    def create_sec_col_from_src_2cols(df, col1, col2):
+        return (df[col1] - df[col2]).dt.total_seconds()
+
+    @staticmethod
     def convert_dtype_to_datetime(df, cols_li):
         [df[c].convert_objects().astype(np.datetime64) for c in cols_li]
 
     @staticmethod
     def convert_dtype_to_numeric(df, cols_li):
         [df[c].convert_objects(convert_numeric=True).astype(np.numeric) for c in cols_li]
+
+    @staticmethod
+    def dt_min_round(df, col, round_min):
+        df[col] = df[col].dt.round(str(round_min) + 'min')
+
+    @staticmethod
+    def create_cstm_strctr(df):
+        return "男 : " + df['H.客数（男）'].astype(str) + '人, 女 : ' + df['H.客数（女）'].astype(str) + '人'
+
+    @staticmethod
+    def create_cstm_ratio(df):
+        return (df['H.客数（男）'] / df['H.客数（合計）']).round(2)
+
+    @staticmethod
+    def specific_data_correction(df):
+        df['D.サブメニュー'] = df.apply(lambda x: x['D.商品'] if x['D.帳票集計対象商品'] not in ['Yes', 'No'] \
+            else x['D.サブメニュー'], axis=1)
+
+        df['D.商品'] = df.apply(lambda x: x['D.帳票集計対象商品'] if x['D.帳票集計対象商品'] not in ['Yes', 'No'] \
+            else x['D.商品'], axis=1)

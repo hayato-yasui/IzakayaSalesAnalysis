@@ -34,7 +34,6 @@ class PreprocessSetting(object):
     # DATA_FILES_TO_FETCH = ['定楽屋 金山店2018-04-01-2018-06-30_before_grouping.csv', ]
     PROCESSED_DATA_DIR = './data/Input/processed_data/'+ TGT_STORE +'/'
     UNNECESSARY_COLS = ['親カテゴリ', 'H.合算先伝票番号', 'H.集計フラグ']
-    DIVIDE_NECESSARY_COLS = ['D.商品']
 
     GROUPING_WAY = {'D.数量': "sum", 'D.価格': "sum", 'H.集計営業日': "min"}
 

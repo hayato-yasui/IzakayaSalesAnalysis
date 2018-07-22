@@ -26,9 +26,17 @@ class StoreCurrAnalysisSetting(object):
     PIE_CHART_SET = ['D.商品カテゴリ2', 'D.価格']
 
     GROUPING_WAY = {'D.価格': "sum"}
+    ORD_TRAN_KEY = [[],['D.商品カテゴリ2',],["H.客数（合計）",],["客構成",]]
+
+    GROUPING_WAY_DAILY_CSTM = {'H.客数（合計）': "sum",'H.客数（男）': "sum",'H.客数（女）': "sum",'男性比率': "mean",}
+    ABC_BILL_LEVEL_KEY = [["客構成"], ["滞在時間"], ['男性比率',]]
+    ABC_NO_BILL_LEVEL_KEY = [['D.商品カテゴリ2'], ['D.商品名']]
+    CALC_PRICE_PER_CSTM =["客構成",]
 
     TIME_SERIES_GRAPH_MONTHLY = ['売上', '来店総数']
     TIME_SERIES_GRAPH_DAYLY = ['売上', '来店総数']
+
+    OUTPUT_F_EXCEL = '店舗情報まとめ.xlsx'
 
     FIG_FILE_NAME = '定楽屋 金山店2018-04-01-2018-06-30.png'
 
@@ -40,9 +48,6 @@ class PreprocessSetting(object):
     RAW_DATA_DIR = './data/Input/raw_data/'
     DATA_FILES_TO_FETCH = ['売上データ詳細_' + TGT_STORE + '_20180401-0630.csv', ]
     PROCESSED_DATA_DIR = './data/Input/processed_data/'+ TGT_STORE +'/'
-    UNNECESSARY_COLS = ['親カテゴリ', 'H.合算先伝票番号', 'H.集計フラグ']
-    DIVIDE_NECESSARY_COLS = ['D.商品']
-
 
     GROUPING_WAY = {'D.数量': "sum", 'D.価格': "sum", 'H.集計営業日': "min"}
 
