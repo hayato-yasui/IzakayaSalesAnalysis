@@ -10,7 +10,7 @@ class SrcConversion(object):
                      'H.伝票処理日':'datetime','H.集計対象営業年月日':'datetime','H.伝票金額':'numeric',
                      'H.客数（合計）': 'numeric','H.客数（男）': 'numeric','H.客数（女）': 'numeric',}
 
-    DIVIDE_NECESSARY_COLS = ['D.商品']
+    DIVIDE_NECESSARY_COLS = ['D.商品','H.店舗']
     UNNECESSARY_COLS_FOR_ALL_ANALYSIS = ['親カテゴリ', 'H.合算先伝票番号', 'H.集計フラグ']
 
 class GroupingUnit(object):
@@ -19,5 +19,13 @@ class GroupingUnit(object):
     ITEM_CATEGORY2 = ['D.商品カテゴリ2']
     DOW = ['H.曜日', ]
     BILL = ['H.伝票番号',]
+
+class MergeMasterData(object):
+    # Store master
+    F_PATH_STORE = './data/Input/master/store/store.csv'
+    NECESSARY_COLS = ['店舗名','都道府県','営業開始時間','営業締め時間',]
+
+    # weather master
+    DIR_WEATHER = './data/Input/master/weather/'
 
 

@@ -12,7 +12,7 @@ from Common.Logic.Preprocess import Preprocess
 from Common.Logic.Postprocess import Postprocess
 from Common.Setting.MultipleRegressionAnalysis import *
 from Common.Setting.Common.PreprocessSetting import *
-
+from Common.util import Util
 
 # class PLAYER_ANSWER(Enum):
 #     MIN = 'MIN'
@@ -31,13 +31,16 @@ class MultipleRegressionAnalysis:
         self.preproc = Preprocess()
         self.postproc = Postprocess()
         self.chart_cli = ChartClient()
+        self.sc = SrcConversion()
         self.gu = GroupingUnit()
+        self.mmd = MergeMasterData()
+        self.util = Util()
 
     def execute(self):
-        preproc_csv_file_name = self._preprocess()
+        self.df_preproc,preproc_csv_file_name = self._preprocess()
         # preproc_csv_file_name = ''
-        self.df_preproc = self.preproc.fetch_csv_and_create_src_df(self.preproc_s.PROCESSED_DATA_DIR
-                                                                   , [preproc_csv_file_name])
+        # self.df_preproc = self.preproc.fetch_csv_and_create_src_df(self.preproc_s.PROCESSED_DATA_DIR
+        #                                                            , [preproc_csv_file_name])
         corr = self._calc_correlation(self.df_preproc)
         print(corr)
         self._create_prediction_model()
@@ -51,15 +54,19 @@ class MultipleRegressionAnalysis:
                                                                   self.preproc_s.TGT_PERIOD_TOP,
                                                                   memo='_before_grouping')
 
+        df_src =self.preproc.merge_store_master(df_src,self.mmd.F_PATH_STORE)
+        df_src =self.preproc.merge_weather_master(df_src,self.mmd.DIR_WEATHER,self.preproc_s.TGT_PERIOD_FLOOR,
+                                                  self.preproc_s.TGT_PERIOD_TOP)
+
         # Do grouping though, no change df name due to being able to skip those process
-        df_src = self.preproc.grouping(df_src, self.gu.DOW, self.preproc_s.GROUPING_WAY)
+        # df_src = self.preproc.grouping(df_src, self.gu.DOW, self.preproc_s.GROUPING_WAY)
         preproc_csv_file_name = self.preproc.create_proc_data_csv(df_src, self.preproc_s.PROCESSED_DATA_DIR,
                                                                   self.preproc_s.TGT_STORE,
                                                                   self.preproc_s.TGT_PERIOD_FLOOR,
                                                                   self.preproc_s.TGT_PERIOD_TOP,
                                                                   '_' + self.preproc_s.GROUPING_FILE_MEMO)
 
-        return preproc_csv_file_name
+        return df_src,preproc_csv_file_name
 
     def _get_preproc_data(self, csv_file_name):
         return pd.read_csv(self.preproc_s.PROCESSED_DATA_DIR + csv_file_name, encoding='cp932')

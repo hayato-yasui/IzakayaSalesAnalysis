@@ -13,6 +13,7 @@ from Common.Setting.Common.PreprocessSetting import *
 
 class Preprocess:
     sc = SrcConversion()
+    mmd = MergeMasterData
 
     def common_proc(self, setting):
         df = self.fetch_csv_and_create_src_df(setting.RAW_DATA_DIR, setting.DATA_FILES_TO_FETCH)
@@ -24,11 +25,10 @@ class Preprocess:
         df = self.convert_dtype(df, self.sc.CONVERT_DTYPE)
         df = self.divide_col(df, self.sc.DIVIDE_NECESSARY_COLS)
         df = self.replace_values(df, self.sc.REPLACE_UNEXPECTED_VAL_TO_ALT_VAL,
-                                             self.sc.REPLACE_NAN_TO_ALT_VAL)
+                                 self.sc.REPLACE_NAN_TO_ALT_VAL)
 
         # df = self.deal_missing_values(df)
         # df = self.change_label_name(df)
-
 
         # Create new cols
         df = self.create_col_from_src_2cols(df, 'D.オーダー日時', 'H.伝票発行日', '注文時間')
@@ -101,7 +101,6 @@ class Preprocess:
             else:
                 df[k] = df[k].astype(v)
         return df
-
 
     @staticmethod
     def grouping(df, key_li, grouping_item_and_way_dict, index_col=None):
@@ -218,3 +217,19 @@ class Preprocess:
 
         df['D.商品'] = df.apply(lambda x: x['D.帳票集計対象商品'] if x['D.帳票集計対象商品'] not in ['Yes', 'No'] \
             else x['D.商品'], axis=1)
+
+    # マスターデータを取得し、結合する
+    def merge_store_master(self, df_src, file_path):
+        df_store = pd.read_csv(file_path, encoding='cp932', engine='python')
+        df_store = df_store[self.mmd.NECESSARY_COLS]
+        return pd.merge(df_src, df_store, left_on='H.店舗名', right_on='店舗名')
+
+    @staticmethod
+    def merge_weather_master(df_src, dir, floor_date, top_date, prefecture='all'):
+        file_name = 'weather_' + str(floor_date).replace("-", "") + '-' + str(top_date).replace("-", "") + '.csv'
+        df_weather = pd.read_csv(dir + file_name, encoding='cp932', engine='python')
+        if prefecture != 'all':
+            df_weather = df_weather[df_weather['都道府県'] == prefecture]
+        df_weather['年月日'] = pd.to_datetime(df_weather['年月日'], errors='coerce')
+        df_weather.set_index(pd.DatetimeIndex(df_weather['年月日']), inplace=True)
+        return pd.merge(df_src, df_weather, left_on=['都道府県','H.集計対象営業年月日'], right_on=['都道府県','年月日'])
