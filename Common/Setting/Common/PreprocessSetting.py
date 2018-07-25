@@ -20,7 +20,7 @@ class GroupingUnit(object):
     DOW = ['H.曜日', ]
     BILL = ['H.伝票番号',]
 
-class MergeMasterData(object):
+class MergeMasterTableSetting(object):
     # Store master
     F_PATH_STORE = './data/Input/master/store/store.csv'
     NECESSARY_COLS = ['店舗名','都道府県','営業開始時間','営業締め時間',]

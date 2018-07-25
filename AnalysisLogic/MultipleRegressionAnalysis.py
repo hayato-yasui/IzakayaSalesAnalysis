@@ -8,8 +8,8 @@ from sklearn import linear_model
 import matplotlib.pyplot as plt
 
 from Common.Logic.ChartClient import ChartClient
-from Common.Logic.Preprocess import Preprocess
-from Common.Logic.Postprocess import Postprocess
+from Common.Logic.Preprocess import *
+from Common.Logic.Postprocess import *
 from Common.Setting.MultipleRegressionAnalysis import *
 from Common.Setting.Common.PreprocessSetting import *
 from Common.util import Util
@@ -30,10 +30,10 @@ class MultipleRegressionAnalysis:
         self.mra_s = MultipleRegressionAnalysisSetting()
         self.preproc = Preprocess()
         self.postproc = Postprocess()
+        self.mmt = MergeMasterTable()
+        self.mmt_s = MergeMasterTableSetting()
         self.chart_cli = ChartClient()
-        self.sc = SrcConversion()
         self.gu = GroupingUnit()
-        self.mmd = MergeMasterData()
         self.util = Util()
 
     def execute(self):
@@ -42,6 +42,8 @@ class MultipleRegressionAnalysis:
         # self.df_preproc = self.preproc.fetch_csv_and_create_src_df(self.preproc_s.PROCESSED_DATA_DIR
         #                                                            , [preproc_csv_file_name])
         corr = self._calc_correlation(self.df_preproc)
+        corr.replace(np.nan, 0, inplace=True)
+        corr.replace([np.inf, -np.inf], 0, inplace=True)
         print(corr)
         self._create_prediction_model()
         # self._postprocess()
@@ -54,9 +56,9 @@ class MultipleRegressionAnalysis:
                                                                   self.preproc_s.TGT_PERIOD_TOP,
                                                                   memo='_before_grouping')
 
-        df_src =self.preproc.merge_store_master(df_src,self.mmd.F_PATH_STORE)
-        df_src =self.preproc.merge_weather_master(df_src,self.mmd.DIR_WEATHER,self.preproc_s.TGT_PERIOD_FLOOR,
-                                                  self.preproc_s.TGT_PERIOD_TOP)
+        df_src = self.mmt.merge_store_master(df_src, self.mmt_s.F_PATH_STORE)
+        df_src = self.mmt.merge_weather_master(df_src, self.mmt_s.DIR_WEATHER, self.preproc_s.TGT_PERIOD_FLOOR,
+                                               self.preproc_s.TGT_PERIOD_TOP)
 
         # Do grouping though, no change df name due to being able to skip those process
         # df_src = self.preproc.grouping(df_src, self.gu.DOW, self.preproc_s.GROUPING_WAY)
@@ -83,9 +85,9 @@ class MultipleRegressionAnalysis:
 
     def _del_lower_corr_cols(self):
         # get columns that have high corr
-        high_corr_cols_li = self.df_preproc.corr()[(self.df_preproc.corr()['価格'] >= self.mra_s.CORR_LIMIT) |
+        high_corr_cols_li = self.df_preproc.corr()[(self.df_preproc.corr()['D.価格'] >= self.mra_s.CORR_LIMIT) |
                                                    (self.df_preproc.corr()[
-                                                        '価格'] <= -self.mra_s.CORR_LIMIT)].index.values
+                                                        'D.価格'] <= -self.mra_s.CORR_LIMIT)].index.values
         return self.df_preproc[high_corr_cols_li]
 
     def _normalization(self):
@@ -97,8 +99,8 @@ class MultipleRegressionAnalysis:
         # X = Predictor variable , Y = Objective variable
         # X = self.df_sales_high_corr.drop('売上', axis=1).as_matrix()
         # Y = self.df_sales_high_corr['売上'].as_matrix()
-        X = self.df_sales_high_corr.drop('価格', axis=1).values
-        Y = self.df_sales_high_corr['価格'].values
+        X = self.df_sales_high_corr.drop('D.価格', axis=1).values
+        Y = self.df_sales_high_corr['D.価格'].values
         return X, Y
 
     def _create_model(self, X, Y):
