@@ -28,9 +28,9 @@ class StoreCurrAnalysis:
 
     # def execute(self,tgt_store):
     def execute(self):
-        # tgt_store = ['大和乃山賊', '定楽屋', 'うおにく', 'かこい屋', 'くつろぎ屋', 'ご馳走屋名駅店', 'ご馳走屋金山店',
-        #              '九州乃山賊小倉総本店', '和古屋', '楽屋','鳥Bouno!', 'ぐるめ屋']
-        tgt_store = ['大和乃山賊',]
+        tgt_store = ['大和乃山賊', '定楽屋', 'うおにく', 'かこい屋', 'くつろぎ屋', 'ご馳走屋名駅店', 'ご馳走屋金山店',
+                     '九州乃山賊小倉総本店', '和古屋', '楽屋','鳥Bouno!', 'ぐるめ屋']
+        # tgt_store = ['大和乃山賊',]
         for s in tgt_store:
             self.sca_s.TGT_STORE = self.preproc_s.TGT_STORE = s
             self.sca_s.OUTPUT_DIR = './data/OUTPUT/' + self.sca_s.TGT_STORE + '/'

@@ -3,24 +3,22 @@ import re
 import pandas as pd
 import numpy as np
 import datetime
-from enum import Enum, IntEnum
-from sklearn import linear_model
-import matplotlib.pyplot as plt
-import math
 
 from Common.Setting.Common.PreprocessSetting import *
 
 
 class Preprocess:
-    sc = SrcConversion()
+    def __init__(self):
+        self.sc = SrcConversion()
 
     def common_proc(self, setting):
         df = self.fetch_csv_and_create_src_df(setting.RAW_DATA_DIR, setting.DATA_FILES_TO_FETCH)
         # df = self.extract_data(df)
 
         # Data cleansing and convert data-type
-        self.specific_data_correction(df)
+        df = self.del_rec(df, self.sc.DEL_REC_DICT)
         self.del_unnecessary_cols(df, self.sc.UNNECESSARY_COLS_FOR_ALL_ANALYSIS)
+        self.specific_data_correction(df)
         df = self.convert_dtype(df, self.sc.CONVERT_DTYPE)
         df = self.divide_col(df, self.sc.DIVIDE_NECESSARY_COLS)
         df = self.replace_values(df, self.sc.REPLACE_UNEXPECTED_VAL_TO_ALT_VAL,
@@ -51,6 +49,15 @@ class Preprocess:
         return df.drop(columns=unnecessary_cols, axis=1, inplace=True)
 
     @staticmethod
+    def del_rec(df, del_rec_dict):
+        for k, v_list in del_rec_dict.items():
+            if v_list is None:
+                df = df[df[k].isnull() == True]
+            else:
+                df = df[df[k].isin(v_list) == False]
+        return df
+
+    @staticmethod
     def divide_col(df, divide_necessary_cols):
         # divide cols that has ID and name like 店舗ID:店舗名 -> 店舗ID,店舗名
         for c in divide_necessary_cols:
@@ -71,6 +78,7 @@ class Preprocess:
         return df
 
     @staticmethod
+    # ToDo:統合
     def replace_missing_value(df):
         df.fillna(0, inplace=True)
         df.replace([np.inf, -np.inf], 0, inplace=True)
@@ -223,21 +231,22 @@ class Preprocess:
         df['D.商品'] = df.apply(lambda x: x['D.帳票集計対象商品'] if x['D.帳票集計対象商品'] not in ['Yes', 'No'] \
             else x['D.商品'], axis=1)
 
+
 class MergeMasterTable:
     def __init__(self):
-        mmt_s = MergeMasterTableSetting()
+        self.mmt_s = MergeMasterTableSetting()
 
     def merge_store_master(self, df_src, file_path):
         df_store = pd.read_csv(file_path, encoding='cp932', engine='python')
         df_store = df_store[self.mmt_s.NECESSARY_COLS]
         return pd.merge(df_src, df_store, left_on='H.店舗名', right_on='店舗名')
 
-    def merge_weather_master(self,df_src, dir, floor_date, top_date, prefecture='all'):
+    def merge_weather_master(self, df_src, dir, floor_date, top_date, prefecture='all'):
         file_name = 'weather_' + str(floor_date).replace("-", "") + '-' + str(top_date).replace("-", "") + '.csv'
         df_weather = pd.read_csv(dir + file_name, encoding='cp932', engine='python')
         if prefecture != 'all':
             df_weather = df_weather[df_weather['都道府県'] == prefecture]
-        df_weather['年月日'] = pd.to_datetime(df_weather['年月日'], errors='coerce',format='yyyy/mm/dd')
+        df_weather['年月日'] = pd.to_datetime(df_weather['年月日'], errors='coerce', format='yyyy/mm/dd')
         # df_weather['年月日'] = pd.to_datetime(df_weather['年月日'], errors='coerce')
         df_weather.set_index(pd.DatetimeIndex(df_weather['年月日']), inplace=True)
-        return pd.merge(df_src, df_weather, left_on=['都道府県','H.集計対象営業年月日'], right_on=['都道府県','年月日'])
+        return pd.merge(df_src, df_weather, left_on=['都道府県', 'H.集計対象営業年月日'], right_on=['都道府県', '年月日'])
