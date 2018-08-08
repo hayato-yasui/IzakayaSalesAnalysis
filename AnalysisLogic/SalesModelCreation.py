@@ -102,7 +102,7 @@ class SalesModelCreation:
         model.summary()
 
         # Training
-        model.fit(X_train, y_train, batch_size=20, epochs=200)
+        model.fit(X_train, y_train, batch_size=200, epochs=200)
 
         # スコア（参考値）
         model.evaluate(X_test, y_test)

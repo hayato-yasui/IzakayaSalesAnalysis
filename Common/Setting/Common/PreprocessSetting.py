@@ -10,7 +10,7 @@ class SrcConversion(object):
                      'H.伝票処理日': 'datetime', 'H.集計対象営業年月日': 'datetime', 'H.伝票金額': 'numeric',
                      'H.客数（合計）': 'numeric', 'H.客数（男）': 'numeric', 'H.客数（女）': 'numeric', }
 
-    DIVIDE_NECESSARY_COLS = ['D.商品', 'H.店舗','H.テーブル番号']
+    DIVIDE_NECESSARY_COLS = ['D.商品', 'H.店舗', 'H.テーブル番号']
     UNNECESSARY_COLS_FOR_ALL_ANALYSIS = ['親カテゴリ', 'H.集計フラグ', 'H.伝票番号枝番', 'H.元伝票番号', 'H.合算先伝票番号', 'H.支払ステータス',
                                          'H.深夜料金', 'H.テーブルチャージ料金', 'H.サービス料金', 'H.免税額（一般品）', 'H.免税額（消耗品）', 'D.免税区分',
                                          'D.免税額', 'H.値割引科目別金額（割引_*nothing*）', 'H.支払金額（ポイント）', 'H.支払金額（電子マネー）',
@@ -34,7 +34,7 @@ class GroupingUnit(object):
 class MergeMasterTableSetting(object):
     # Store master
     F_PATH_STORE = './data/Input/master/store/store.csv'
-    NECESSARY_COLS = ['店舗名', '都道府県', '営業開始時間', '営業締め時間', 'サービス料金掛け率', ]
+    NECESSARY_COLS = ['店舗名', '都道府県', '営業開始時間', '営業締め時間', 'サービス料金掛け率', '席数', ]
 
     # weather master
     DIR_WEATHER = './data/Input/master/weather/'

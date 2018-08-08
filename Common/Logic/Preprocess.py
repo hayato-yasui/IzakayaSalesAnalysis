@@ -186,7 +186,8 @@ class Preprocess:
     def create_col_from_src_2cols(df, col1, col2, new_col, method='minus'):
         # method is selected in ('minus', 'plus', 'divide', 'times')
         df_tgt_cols = df[[col1, col2]]
-        df_tgt_cols.dropna(how='any', inplace=True)
+        # df_tgt_cols.dropna(how='any', inplace=True)
+        df_tgt_cols = df_tgt_cols.dropna(how='any')
         if method == 'minus':
             df[new_col] = df_tgt_cols[col1] - df_tgt_cols[col2]
         elif method == 'plus':
@@ -231,6 +232,28 @@ class Preprocess:
         df['D.商品'] = df.apply(lambda x: x['D.帳票集計対象商品'] if x['D.帳票集計対象商品'] not in ['Yes', 'No'] \
             else x['D.商品'], axis=1)
 
+    @staticmethod
+    def calc_entering_and_exiting_time(df):
+        df['入店時間'] = df['H.伝票発行日'].apply(
+            lambda x: int(x.strftime('%H%M')) + 2400 if int(x.strftime('%H%M')) < 1200 else int(x.strftime('%H%M')))
+        df['退店時間'] = df['H.伝票処理日'].apply(
+            lambda x: int(x.strftime('%H%M')) + 2400 if int(x.strftime('%H%M')) < 1200 else int(x.strftime('%H%M')))
+        return df
+
+    @staticmethod
+    def create_stay_presense(df, start_time, end_time):
+        curr_time = start_time
+        while curr_time < end_time:
+            if curr_time % 100 == 0:
+                curr_time_plus30 = curr_time + 30
+            else:
+                curr_time_plus30 = curr_time + 70
+            df[str(curr_time) + '-' + str(curr_time_plus30)] = 0
+            df.loc[(df['入店時間'] <= curr_time_plus30) & (curr_time_plus30 <= df['退店時間']), str(curr_time) + '-' + str(
+                curr_time_plus30)] = df['H.客数（合計）']
+            curr_time = curr_time_plus30
+        return df
+
 
 class MergeMasterTable:
     def __init__(self):
@@ -239,6 +262,8 @@ class MergeMasterTable:
     def merge_store_master(self, df_src, file_path):
         df_store = pd.read_csv(file_path, encoding='cp932', engine='python')
         df_store = df_store[self.mmt_s.NECESSARY_COLS]
+        df_store['営業開始時間'] = df_store['営業開始時間'].str.replace(':', '').astype(int)
+        df_store['営業締め時間'] = df_store['営業締め時間'].str.replace(':', '').astype(int)
         return pd.merge(df_src, df_store, left_on='H.店舗名', right_on='店舗名')
 
     def merge_weather_master(self, df_src, dir, floor_date, top_date, prefecture='all'):
