@@ -1,5 +1,7 @@
 import os.path
 import openpyxl as px
+import pandas as pd
+import matplotlib.pyplot as plt
 
 class Util:
 
@@ -14,8 +16,13 @@ class Util:
             wb.save(file_path)
 
     @staticmethod
-    def df_to_csv(df, dir, file_name,index=False):
+    def df_to_csv(df, dir, file_name, index=False):
         if not os.path.exists(dir):
             os.mkdir(dir)
-        df.to_csv(dir + '/' + file_name, encoding='cp932',index=index)
+        df.to_csv(dir + '/' + file_name, encoding='cp932', index=index)
+
+    @staticmethod
+    def moving_average(df, col_name, period):
+        df['avg_' + col_name] = df[col_name].rolling(window=period).mean()
+        return df
 
