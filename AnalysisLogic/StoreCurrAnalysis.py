@@ -54,8 +54,8 @@ class StoreCurrAnalysis:
 
     def _preprocess(self):
         df_src = self.preproc.common_proc(self.preproc_s)
-        df_src = self.mmt.merge_store_master(df_src, self.mmt_s.F_PATH_STORE)
-        # df_src = self.mmt.merge_weather_master(df_src, self.mmt_s.DIR_WEATHER, self.preproc_s.TGT_PERIOD_FLOOR,
+        df_src = self.mmt.merge_store(df_src, self.mmt_s.F_PATH_STORE)
+        # df_src = self.mmt.merge_weather(df_src, self.mmt_s.DIR_WEATHER, self.preproc_s.TGT_PERIOD_FLOOR,
         #                                        self.preproc_s.TGT_PERIOD_TOP)
 
         df_src = self.preproc.calc_entering_and_exiting_time(df_src)

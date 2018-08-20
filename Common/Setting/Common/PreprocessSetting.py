@@ -29,6 +29,8 @@ class GroupingUnit(object):
     ITEM_CATEGORY2 = ['D.商品カテゴリ2']
     DOW = ['H.曜日', ]
     BILL = ['H.伝票番号', ]
+    DOW_ITEM = ['H.曜日', 'D.商品名']
+    DOW_ITEM_CATEGORY2 = ['H.曜日','D.商品カテゴリ2']
 
 
 class MergeMasterTableSetting(object):
@@ -38,3 +40,12 @@ class MergeMasterTableSetting(object):
 
     # weather master
     DIR_WEATHER = './data/Input/master/weather/'
+
+    # calender maseter
+    F_PATH_CALENDER = './data/Input/master/calender/calender.csv'
+
+class ColumnGroup(object):
+    ITEM = ['']
+    STORE = []
+    CUSTM = []
+    WEATHER = ['']

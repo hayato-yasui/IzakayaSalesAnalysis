@@ -42,8 +42,8 @@ class MultipleRegressionAnalysis:
         # self.df_preproc = self.preproc.fetch_csv_and_create_src_df(self.preproc_s.PROCESSED_DATA_DIR
         #                                                            , [preproc_csv_file_name])
         corr = self._calc_correlation(self.df_preproc)
-        corr.replace(np.nan, 0, inplace=True)
-        corr.replace([np.inf, -np.inf], 0, inplace=True)
+        # corr.replace(np.nan, 0, inplace=True)
+        # corr.replace([np.nan,np.inf, -np.inf], 0, inplace=True)
         print(corr)
         self._create_prediction_model()
         # self._postprocess()
@@ -56,9 +56,9 @@ class MultipleRegressionAnalysis:
                                                                   self.preproc_s.TGT_PERIOD_TOP,
                                                                   memo='_before_grouping')
 
-        df_src = self.mmt.merge_store_master(df_src, self.mmt_s.F_PATH_STORE)
-        df_src = self.mmt.merge_weather_master(df_src, self.mmt_s.DIR_WEATHER, self.preproc_s.TGT_PERIOD_FLOOR,
-                                               self.preproc_s.TGT_PERIOD_TOP)
+        df_src = self.mmt.merge_store(df_src, self.mmt_s.F_PATH_STORE)
+        df_src = self.mmt.merge_weather(df_src, self.mmt_s.DIR_WEATHER, self.preproc_s.TGT_PERIOD_FLOOR,
+                                        self.preproc_s.TGT_PERIOD_TOP)
 
         # Do grouping though, no change df name due to being able to skip those process
         # df_src = self.preproc.grouping(df_src, self.gu.DOW, self.preproc_s.GROUPING_WAY)
@@ -75,7 +75,7 @@ class MultipleRegressionAnalysis:
 
     # for debug
     def _calc_correlation(self, df_preproc):
-        return df_preproc.corr(method='pearson')
+        return df_preproc.corr(method='pearson').replace([np.nan,np.inf, -np.inf], 0, inplace=True)
 
     def _create_prediction_model(self):
         self.df_sales_high_corr = self._del_lower_corr_cols()

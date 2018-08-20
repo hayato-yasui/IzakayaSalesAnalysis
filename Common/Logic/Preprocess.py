@@ -259,19 +259,26 @@ class MergeMasterTable:
     def __init__(self):
         self.mmt_s = MergeMasterTableSetting()
 
-    def merge_store_master(self, df_src, file_path):
+    def merge_store(self, df_src, file_path):
         df_store = pd.read_csv(file_path, encoding='cp932', engine='python')
         df_store = df_store[self.mmt_s.NECESSARY_COLS]
         df_store['営業開始時間'] = df_store['営業開始時間'].str.replace(':', '').astype(int)
         df_store['営業締め時間'] = df_store['営業締め時間'].str.replace(':', '').astype(int)
         return pd.merge(df_src, df_store, left_on='H.店舗名', right_on='店舗名')
 
-    def merge_weather_master(self, df_src, dir, floor_date, top_date, prefecture='all'):
+    def merge_weather(self, df_src, dir, floor_date, top_date, prefecture='all'):
         file_name = 'weather_' + str(floor_date).replace("-", "") + '-' + str(top_date).replace("-", "") + '.csv'
         df_weather = pd.read_csv(dir + file_name, encoding='cp932', engine='python')
         if prefecture != 'all':
             df_weather = df_weather[df_weather['都道府県'] == prefecture]
-        df_weather['年月日'] = pd.to_datetime(df_weather['年月日'], errors='coerce', format='yyyy/mm/dd')
-        # df_weather['年月日'] = pd.to_datetime(df_weather['年月日'], errors='coerce')
-        df_weather.set_index(pd.DatetimeIndex(df_weather['年月日']), inplace=True)
-        return pd.merge(df_src, df_weather, left_on=['都道府県', 'H.集計対象営業年月日'], right_on=['都道府県', '年月日'])
+        df_weather['年月日'] = pd.to_datetime(df_weather['年月日'], errors='coerce')
+        # df_weather.set_index(pd.DatetimeIndex(df_weather['年月日']), inplace=True)
+        return pd.merge(df_src, df_weather, left_on=['都道府県', 'H.集計対象営業年月日'], right_on=['都道府県', '年月日']) \
+            .drop('年月日', axis=1)
+
+    def merge_calender(self, df_src, file_path, floor_date=None, top_date=None):
+        df_calender = pd.read_csv(file_path, encoding='cp932', engine='python')
+        if floor_date is not None and top_date is not None:
+            df_calender = df_calender[df_calender['日付'].between(floor_date, top_date)]
+        df_calender['日付'] = pd.to_datetime(df_calender['日付'], errors='coerce')
+        return pd.merge(df_src, df_calender, left_on='H.集計対象営業年月日', right_on='日付').drop('日付', axis=1)
