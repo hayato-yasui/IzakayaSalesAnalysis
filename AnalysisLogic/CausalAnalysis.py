@@ -72,6 +72,7 @@ class CausalAnalysis:
         return df_src, preproc_csv_file_name
 
     def _leveling_by_dow(self):
+        self.df_preproc = self.df_preproc[self.gu.DOW_ITEM +'店舗'+ 'D.数量' + 'D.価格' + '曜日' + '翌日が休日']
         self.df_grouped_by_dow_itm =self.df_preproc.groupby(self.gu.DOW_ITEM).sum().reset_index()
         # self.df_preproc[] = self.df_preproc[]
         print(1)
