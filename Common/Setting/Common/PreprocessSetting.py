@@ -30,6 +30,7 @@ class GroupingUnit(object):
     DOW = ['H.曜日', ]
     BILL = ['H.伝票番号', ]
     DOW_ITEM = ['H.曜日', 'D.商品名']
+    ITEM = ['D.商品名']
     DOW_ITEM_CATEGORY2 = ['H.曜日','D.商品カテゴリ2']
 
 

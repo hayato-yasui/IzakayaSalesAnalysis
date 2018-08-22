@@ -56,7 +56,7 @@ class CausalAnalysis:
         df_src = self.preproc.common_proc(self.preproc_s)
         df_src = self.mmt.merge_store(df_src, self.mmt_s.F_PATH_STORE)
         df_src = self.mmt.merge_weather(df_src, self.mmt_s.DIR_WEATHER, self.preproc_s.TGT_PERIOD_FLOOR,
-                                               self.preproc_s.TGT_PERIOD_TOP)
+                                        self.preproc_s.TGT_PERIOD_TOP)
         df_src = self.mmt.merge_calender(df_src, self.mmt_s.F_PATH_CALENDER)
         df_src = self.preproc.calc_entering_and_exiting_time(df_src)
         df_src = self.preproc.create_stay_presense(df_src, df_src.loc[0, '営業開始時間'], df_src.loc[0, '営業締め時間'])
@@ -72,11 +72,11 @@ class CausalAnalysis:
         return df_src, preproc_csv_file_name
 
     def _leveling_by_dow(self):
-        self.df_preproc = self.df_preproc[self.gu.DOW_ITEM +'店舗'+ 'D.数量' + 'D.価格' + '曜日' + '翌日が休日']
-        self.df_grouped_by_dow_itm =self.df_preproc.groupby(self.gu.DOW_ITEM).sum().reset_index()
-        # self.df_preproc[] = self.df_preproc[]
+        self.df_preproc = self.df_preproc[self.gu.ITEM + ['D.数量','D.価格','翌日が休日']]
+        df_normal_day_by_itm = self.df_preproc[self.df_preproc['翌日が休日']==0].groupby(self.gu.ITEM + ['翌日が休日']).sum().reset_index().drop('翌日が休日',axis=1)
+        df_before_hol_by_itm = self.df_preproc[self.df_preproc['翌日が休日']==1].groupby(self.gu.ITEM + ['翌日が休日']).sum().reset_index().drop('翌日が休日',axis=1)
+        df_sales_by_itm_day = pd.merge(df_normal_day_by_itm,df_before_hol_by_itm, on=self.gu.ITEM,how='outer',suffixes=('_普通の日','_翌日休日')).set_index(self.gu.ITEM)
         print(1)
-
 
     def _output_store_curr_info(self, del_old_file=False):
         self.df_grouped_by_bill = self._create_df_grouped_by_bill()
@@ -110,7 +110,7 @@ class CausalAnalysis:
         df_daily = self.util.moving_average(df_daily, 'H.伝票金額', 7)
         df_daily = self.util.moving_average(df_daily, 'H.客数（合計）', 7)
         self.chart_cli.plot_axis_is_index(df_daily, needsSave=True,
-                                          file_path=self.sca_s.OUTPUT_DIR + '移動平均_' + self.sca_s.TGT_STORE +'.png')
+                                          file_path=self.sca_s.OUTPUT_DIR + '移動平均_' + self.sca_s.TGT_STORE + '.png')
 
     def _sheet_occupancy(self):
         time_cols = []
@@ -191,6 +191,7 @@ class CausalAnalysis:
         # self.chart_cli.savefig(self.sca_s.OUTPUT_DIR, 'ABC分析_売上構成比.png')
 
         self.output_dict.update({'ABC分析_' + '_'.join(key_li): df_merged})
+
 
 if __name__ == '__main__':
     ca = CausalAnalysis()
