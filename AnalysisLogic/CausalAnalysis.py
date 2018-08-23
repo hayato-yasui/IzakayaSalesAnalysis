@@ -48,7 +48,7 @@ class CausalAnalysis:
             # df_daily = df_grouped_src[self.cols]
             # self.util.df_to_csv(df_daily, self.sca_s.OUTPUT_DIR, '大和乃山賊＿サンプル.csv')
 
-            self._leveling_by_dow()
+            self._leveling_by_day_sales_up()
 
             print(s + " is finish")
 
@@ -71,11 +71,31 @@ class CausalAnalysis:
 
         return df_src, preproc_csv_file_name
 
-    def _leveling_by_dow(self):
-        self.df_preproc = self.df_preproc[self.gu.ITEM + ['D.数量','D.価格','翌日が休日']]
-        df_normal_day_by_itm = self.df_preproc[self.df_preproc['翌日が休日']==0].groupby(self.gu.ITEM + ['翌日が休日']).sum().reset_index().drop('翌日が休日',axis=1)
-        df_before_hol_by_itm = self.df_preproc[self.df_preproc['翌日が休日']==1].groupby(self.gu.ITEM + ['翌日が休日']).sum().reset_index().drop('翌日が休日',axis=1)
-        df_sales_by_itm_day = pd.merge(df_normal_day_by_itm,df_before_hol_by_itm, on=self.gu.ITEM,how='outer',suffixes=('_普通の日','_翌日休日')).set_index(self.gu.ITEM)
+    def _leveling_by_day_sales_up(self):
+        df_grouped_by_itm = self.df_preproc[self.gu.DAY_ITEM + ['D.数量', 'D.価格', '翌日が休日']]
+        df_normal_day_by_itm = df_grouped_by_itm[df_grouped_by_itm['翌日が休日'] == 0].groupby(
+            self.gu.DAY_ITEM + ['翌日が休日']).sum().reset_index().drop(self.gu.DAY + ['翌日が休日'], axis=1)
+        df_before_hol_by_itm = df_grouped_by_itm[df_grouped_by_itm['翌日が休日'] == 1].groupby(
+            self.gu.DAY_ITEM + ['翌日が休日']).sum().reset_index().drop(self.gu.DAY + ['翌日が休日'], axis=1)
+
+        df_normal_day_by_itm = df_normal_day_by_itm.groupby(self.gu.ITEM).agg(['sum', 'count']).reset_index()
+        df_before_hol_by_itm = df_before_hol_by_itm.groupby(self.gu.ITEM).agg(['sum', 'count']).reset_index()
+
+        df_sales_by_itm = pd.merge(df_normal_day_by_itm, df_before_hol_by_itm, on=self.gu.ITEM, how='outer',
+                                   suffixes=('_普通の日', '_翌日休日')).set_index(self.gu.ITEM)
+
+        df_grouped_by_store = self.df_preproc[self.gu.STORE + self.gu.DAY + ['D.数量', 'D.価格', '翌日が休日']]
+
+        df_normal_day_by_store = df_grouped_by_store[df_grouped_by_store['翌日が休日'] == 0].groupby(
+            self.gu.STORE +self.gu.DAY + ['翌日が休日']).sum().reset_index().drop(self.gu.DAY + ['翌日が休日'], axis=1)
+        df_before_hol_by_store = df_grouped_by_store[df_grouped_by_store['翌日が休日'] == 1].groupby(
+            self.gu.STORE + self.gu.DAY + ['翌日が休日']).sum().reset_index().drop(self.gu.DAY + ['翌日が休日'], axis=1)
+        df_normal_day_by_store = df_normal_day_by_store.groupby(self.gu.STORE).agg(['sum', 'count']).reset_index()
+        df_before_hol_by_store = df_before_hol_by_store.groupby(self.gu.STORE).agg(['sum', 'count']).reset_index()
+
+        df_sales_by_store = pd.merge(df_normal_day_by_store, df_before_hol_by_store, on=self.gu.STORE,how='outer',
+                                     suffixes=('_普通の日', '_翌日休日'))
+
         print(1)
 
     def _output_store_curr_info(self, del_old_file=False):
