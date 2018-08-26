@@ -31,10 +31,12 @@ class GroupingUnit(object):
     BILL = ['H.伝票番号', ]
     DOW_ITEM = ['H.曜日', 'D.商品名']
     DAY_ITEM = ['H.集計対象営業年月日','D.商品名']
+    DAY_ITEM_CATEGORY2 = ['H.集計対象営業年月日','D.商品カテゴリ2']
     ITEM = ['D.商品名']
     STORE = ['H.店舗名']
     DOW_ITEM_CATEGORY2 = ['H.曜日','D.商品カテゴリ2']
     DAY = ['H.集計対象営業年月日']
+    STORE_DAY = ['H.店舗名','H.集計対象営業年月日']
 
 class MergeMasterTableSetting(object):
     # Store master

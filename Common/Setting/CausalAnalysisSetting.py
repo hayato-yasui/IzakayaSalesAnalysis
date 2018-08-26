@@ -1,6 +1,7 @@
 import datetime
 import numpy as np
 
+from Common.Logic.Preprocess import *
 TGT_PERIOD_FLOOR = datetime.date(2018, 4, 1)
 TGT_PERIOD_TOP = datetime.date(2018, 6, 30)
 
@@ -41,6 +42,20 @@ class CausalAnalysisSetting(object):
     OUTPUT_F_EXCEL = '店舗情報まとめ.xlsx'
 
     FIG_FILE_NAME = '定楽屋 金山店2018-04-01-2018-06-30.png'
+
+    DIFF_TGT_COL = '翌日が休日'
+    DIFF_CONDITION = 1
+    CALC_TGT_COLS = ['D.価格']
+    SUB_GROUP_COLS = GroupingUnit.DAY_ITEM_CATEGORY2
+    MAIN_GROUP_COLS = GroupingUnit.ITEM_CATEGORY2
+    # SUB_GROUP_COLS = GroupingUnit.STORE_DAY
+    # MAIN_GROUP_COLS = GroupingUnit.STORE
+
+
+    T_TEST_TGT_COL = 'D.商品カテゴリ2'
+    # T_TEST_TGT_COL = '店舗名'
+    T_TEST_DIFF_COL = '雨フラグ'
+    T_TEST_DIFF_CONDITION = 1
 
 class PreprocessSetting(object):
     TGT_STORE = TGT_STORE

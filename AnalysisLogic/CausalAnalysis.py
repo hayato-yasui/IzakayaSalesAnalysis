@@ -6,7 +6,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from multiprocessing import Process
 from openpyxl import load_workbook
-
+from scipy import stats
 from Common.Logic.Preprocess import *
 from Common.Logic.Postprocess import Postprocess
 from Common.Logic.ChartClient import ChartClient
@@ -20,7 +20,7 @@ class CausalAnalysis:
     def __init__(self):
         self.chart_cli = ChartClient()
         self.preproc_s = PreprocessSetting()
-        self.sca_s = CausalAnalysisSetting()
+        self.ca_s = CausalAnalysisSetting()
         self.preproc = Preprocess()
         self.sc = SrcConversion()
         self.gu = GroupingUnit()
@@ -33,9 +33,10 @@ class CausalAnalysis:
         # tgt_store = ['大和乃山賊', '定楽屋', 'うおにく', 'かこい屋', 'くつろぎ屋', 'ご馳走屋名駅店', 'ご馳走屋金山店',
         #              '九州乃山賊小倉総本店', '和古屋', '楽屋', '鳥Bouno!', 'ぐるめ屋']
         tgt_store = ['sample', ]
+        tgt_store = ['大和乃山賊']
         for s in tgt_store:
-            self.sca_s.TGT_STORE = self.preproc_s.TGT_STORE = s
-            self.sca_s.OUTPUT_DIR = './data/OUTPUT/' + self.sca_s.TGT_STORE + '/'
+            self.ca_s.TGT_STORE = self.preproc_s.TGT_STORE = s
+            self.ca_s.OUTPUT_DIR = './data/OUTPUT/' + self.ca_s.TGT_STORE + '/'
             self.preproc_s.DATA_FILES_TO_FETCH = ['売上データ詳細_' + self.preproc_s.TGT_STORE + '_20180401-0630.csv', ]
             self.preproc_s.PROCESSED_DATA_DIR = './data/Input/processed_data/' + self.preproc_s.TGT_STORE + '/'
 
@@ -46,9 +47,11 @@ class CausalAnalysis:
             #                                                            , [preproc_csv_file_name])
             # df_grouped_src = self.df_preproc.groupby(self.cols).mean().reset_index()
             # df_daily = df_grouped_src[self.cols]
-            # self.util.df_to_csv(df_daily, self.sca_s.OUTPUT_DIR, '大和乃山賊＿サンプル.csv')
+            # self.util.df_to_csv(df_daily, self.ca_s.OUTPUT_DIR, '大和乃山賊＿サンプル.csv')
 
-            self._leveling_by_day_sales_up()
+            # self._leveling_by_day_sales_up()
+            df_leveled = self._leveling_sales(self.df_preproc)
+            self.t_test(df_leveled, self.ca_s.T_TEST_TGT_COL, self.ca_s.T_TEST_DIFF_COL, self.ca_s.T_TEST_DIFF_CONDITION,True)
 
             print(s + " is finish")
 
@@ -71,146 +74,72 @@ class CausalAnalysis:
 
         return df_src, preproc_csv_file_name
 
-    def _leveling_by_day_sales_up(self):
-        df_grouped_by_itm = self.df_preproc[self.gu.DAY_ITEM + ['D.数量', 'D.価格', '翌日が休日']]
-        df_normal_day_by_itm = df_grouped_by_itm[df_grouped_by_itm['翌日が休日'] == 0].groupby(
-            self.gu.DAY_ITEM + ['翌日が休日']).sum().reset_index().drop(self.gu.DAY + ['翌日が休日'], axis=1)
-        df_before_hol_by_itm = df_grouped_by_itm[df_grouped_by_itm['翌日が休日'] == 1].groupby(
-            self.gu.DAY_ITEM + ['翌日が休日']).sum().reset_index().drop(self.gu.DAY + ['翌日が休日'], axis=1)
+    def t_test(self, df, index_col, diff_tgt_col, diff_condition,does_output_csv=False):
+        df_t_test_rslt = pd.DataFrame(columns=['item', 'src_count','src_avg','tgt_count','tgt_avg','t', 'p'])
+        df.set_index(index_col, inplace=True)
+        for c in self.ca_s.CALC_TGT_COLS:
+            df_src = df[df[diff_tgt_col] != diff_condition][c + '_平準化']
+            df_tgt = df[df[diff_tgt_col] == diff_condition][c + '_平準化']
 
-        df_normal_day_by_itm = df_normal_day_by_itm.groupby(self.gu.ITEM).agg(['sum', 'count']).reset_index()
-        df_before_hol_by_itm = df_before_hol_by_itm.groupby(self.gu.ITEM).agg(['sum', 'count']).reset_index()
-
-        df_sales_by_itm = pd.merge(df_normal_day_by_itm, df_before_hol_by_itm, on=self.gu.ITEM, how='outer',
-                                   suffixes=('_普通の日', '_翌日休日')).set_index(self.gu.ITEM)
-
-        df_grouped_by_store = self.df_preproc[self.gu.STORE + self.gu.DAY + ['D.数量', 'D.価格', '翌日が休日']]
-
-        df_normal_day_by_store = df_grouped_by_store[df_grouped_by_store['翌日が休日'] == 0].groupby(
-            self.gu.STORE +self.gu.DAY + ['翌日が休日']).sum().reset_index().drop(self.gu.DAY + ['翌日が休日'], axis=1)
-        df_before_hol_by_store = df_grouped_by_store[df_grouped_by_store['翌日が休日'] == 1].groupby(
-            self.gu.STORE + self.gu.DAY + ['翌日が休日']).sum().reset_index().drop(self.gu.DAY + ['翌日が休日'], axis=1)
-        df_normal_day_by_store = df_normal_day_by_store.groupby(self.gu.STORE).agg(['sum', 'count']).reset_index()
-        df_before_hol_by_store = df_before_hol_by_store.groupby(self.gu.STORE).agg(['sum', 'count']).reset_index()
-
-        df_sales_by_store = pd.merge(df_normal_day_by_store, df_before_hol_by_store, on=self.gu.STORE,how='outer',
-                                     suffixes=('_普通の日', '_翌日休日'))
-
+            for item in df.index.unique().tolist():
+                # welch's t-test
+                df_src_by_item = df_src[df_src.index == item]
+                df_tgt_by_item = df_tgt[df_tgt.index == item]
+                t, p = stats.ttest_ind(df_src_by_item, df_tgt_by_item, equal_var=False)
+                df_t_test_rslt = df_t_test_rslt.append(pd.Series([item, df_src_by_item.count(),df_src_by_item.mean(),
+                                                                  df_tgt_by_item.count(),df_tgt_by_item.mean(),t, p],
+                                                                 index=df_t_test_rslt.columns),ignore_index=True).sort_values('p')
+            if does_output_csv:
+                self.util.df_to_csv(df_t_test_rslt, self.ca_s.OUTPUT_DIR, c + '_t検定.csv')
         print(1)
 
-    def _output_store_curr_info(self, del_old_file=False):
-        self.df_grouped_by_bill = self._create_df_grouped_by_bill()
-        self.df_set_date_index = self._create_df_set_date_index()
+    def _leveling_sales(self, df_src):
+        df_calc_src, calc_tgt_dict = self._calc_tgt_sales(self.ca_s.SUB_GROUP_COLS, self.ca_s.MAIN_GROUP_COLS,
+                                                          self.ca_s.CALC_TGT_COLS, self.ca_s.DIFF_TGT_COL,
+                                                          self.ca_s.DIFF_CONDITION)
+        df_leveling_ratio = self._calc_sales_diff(df_calc_src, self.ca_s.CALC_TGT_COLS, does_output_csv=True)
+        df_merged_ratio = pd.merge(df_src, df_leveling_ratio, on=self.ca_s.MAIN_GROUP_COLS)
+        for c in calc_tgt_dict.keys():
+            df_merged_ratio[c + '_平準化'] = df_merged_ratio.apply(
+                lambda x: x[c] // x[c + '_増加率'] if x[self.ca_s.DIFF_TGT_COL] == self.ca_s.DIFF_CONDITION else x[c],
+                axis=1)
+        return df_merged_ratio
 
-        # self.output_dict = dict()
-        # self._monthly_sales()
-        # self._daily_cstm_info()
-        # self._abc_analysis()
-        # self._sheet_occupancy()
-        #
-        # if del_old_file and os.path.isfile(self.sca_s.OUTPUT_DIR + self.sca_s.OUTPUT_F_EXCEL):
-        #     os.remove(self.sca_s.OUTPUT_DIR + self.sca_s.OUTPUT_F_EXCEL)
-        # with pd.ExcelWriter(self.sca_s.OUTPUT_DIR + self.sca_s.OUTPUT_F_EXCEL) as writer:
-        #     self.util.check_existing_and_create_excel_file(self.sca_s.OUTPUT_DIR + self.sca_s.OUTPUT_F_EXCEL)
-        #     writer.book = load_workbook(self.sca_s.OUTPUT_DIR + self.sca_s.OUTPUT_F_EXCEL)
-        #     [v_df.to_excel(writer, sheet_name=k, merge_cells=False) for k, v_df in self.output_dict.items()]
+    def _calc_tgt_sales(self, sub_group_cols: list, main_group_cols: list, calc_tgt_cols: list, diff_tgt_col: str,
+                        diff_condition):
+        calc_tgt_dict = dict()
+        for c in calc_tgt_cols:
+            calc_tgt_dict.update({c: [c + '_sum', c + '_count']})
+        df_grouped = self.df_preproc[sub_group_cols + [diff_tgt_col] + calc_tgt_cols]
+        drop_cols = [c for c in sub_group_cols if c not in main_group_cols] + [diff_tgt_col]
 
-        self._plot_moving_avg()
+        df_normal = df_grouped[df_grouped[diff_tgt_col] != diff_condition].groupby(
+            sub_group_cols + [diff_tgt_col]).sum().reset_index().drop(drop_cols, axis=1)
+        df_special = df_grouped[df_grouped[diff_tgt_col] == diff_condition].groupby(
+            sub_group_cols + [diff_tgt_col]).sum().reset_index().drop(drop_cols, axis=1)
+        dfs = [df_normal, df_special]
+        for idx, df in enumerate(dfs):
+            df = df.groupby(main_group_cols).agg(['sum', 'count']).reset_index()
+            df.columns = ['_'.join(c) if c[1] != '' else c[0] for c in df.columns]
+            for k, v_list in calc_tgt_dict.items():
+                df[k + '_売上/日数'] = df[v_list[0]] / df[v_list[1]]
+            dfs[idx] = df
+        df_calc_src = pd.merge(dfs[0], dfs[1], on=main_group_cols, how='outer',
+                               suffixes=('_normal', '_special')).set_index(main_group_cols)
+        return df_calc_src, calc_tgt_dict
 
-    def _create_df_grouped_by_bill(self):
-        return self.df_preproc.groupby(self.gu.DOW).sum().reset_index()
-
-    def _create_df_set_date_index(self):
-        return self.df_grouped_by_bill.set_index(pd.DatetimeIndex(self.df_grouped_by_bill['H.集計対象営業年月日']))
-
-    def _plot_moving_avg(self):
-        df_daily = self.df_set_date_index.groupby(self.df_set_date_index.index). \
-            agg(self.sca_s.GROUPING_WAY_DAILY)
-
-        df_daily = self.util.moving_average(df_daily, 'H.伝票金額', 7)
-        df_daily = self.util.moving_average(df_daily, 'H.客数（合計）', 7)
-        self.chart_cli.plot_axis_is_index(df_daily, needsSave=True,
-                                          file_path=self.sca_s.OUTPUT_DIR + '移動平均_' + self.sca_s.TGT_STORE + '.png')
-
-    def _sheet_occupancy(self):
-        time_cols = []
-        curr_time = self.df_grouped_by_bill.loc[0, '営業開始時間']
-        end_time = self.df_grouped_by_bill.loc[0, '営業締め時間']
-        sheet_num = int(self.df_grouped_by_bill.loc[0, '席数'])
-        while curr_time < end_time:
-            if curr_time % 100 == 0:
-                curr_time_plus30 = curr_time + 30
-            else:
-                curr_time_plus30 = curr_time + 70
-            time_cols.append(str(curr_time) + '-' + str(curr_time_plus30))
-            curr_time = curr_time_plus30
-
-        df_timely_sheet_occupancy = self.df_set_date_index.groupby([
-            self.df_set_date_index.index.year.rename('year'),
-            self.df_set_date_index.index.month.rename('month'),
-            self.df_set_date_index.index.day.rename('day')])[time_cols].sum() / sheet_num
-
-        self.output_dict.update({'座席占有率': df_timely_sheet_occupancy})
-
-    def _monthly_sales(self):
-        df_monthly_sales = self.df_set_date_index.groupby([
-            self.df_set_date_index.index.year.rename('year'),
-            self.df_set_date_index.index.month.rename('month')])['H.伝票金額'].sum()
-
-        self.output_dict.update({'月間売上': df_monthly_sales})
-
-    def _daily_cstm_info(self):
-        df_daily_cstm = self.df_set_date_index.groupby(self.df_set_date_index.index). \
-            agg(self.sca_s.GROUPING_WAY_DAILY_CSTM)
-        self.output_dict.update({'日別客情報': df_daily_cstm})
-
-        # self.chart_cli.create_pie_chart(
-        #     df=self.preproc.grouping(self.df_preproc, self.sca_s.GROUPING_KEY_ITEM_CATEGORY2,
-        #                              self.sca_s.GROUPING_WAY, self.sca_s.PIE_CHART_SET[0]),
-        #     amount_col=self.sca_s.PIE_CHART_SET[1])
-
-        # 時系列カラムをインデックスに指定する必要がある
-        # self.chart_cli.time_series_graph(self.df_preproc,
-        #                                  amount_cols_li=self.df_preproc[self.sca_s.TIME_SERIES_GRAPH_MONTHLY])
-        # self.chart_cli.time_series_graph(self.df_preproc,
-        #                                  amount_cols_li=self.df_preproc[self.sca_s.TIME_SERIES_GRAPH_DAYLY])
-        #
-
-        # self.chart_cli.plotfig()
-        # self.chart_cli.savefig(self.sca_s.OUTPUT_DIR + self.sca_s.FIG_FILE_NAME)
-        # self.chart_cli.closefig()
-
-    def _abc_analysis(self):
-        [self.sales_and_ratio_by_key(k, True) for k in self.sca_s.ABC_BILL_LEVEL_KEY]
-        [self.sales_and_ratio_by_key(k, False) for k in self.sca_s.ABC_NO_BILL_LEVEL_KEY]
-
-    def sales_and_ratio_by_key(self, key_li, bill_level_summary=True):
-        df_grouped = self.df_preproc.groupby(key_li)
-        df_sales_by_key = df_grouped.agg({'D.価格': np.sum, "H.客数（合計）": np.mean})
-        df_sales_by_key['売上比率'] = df_sales_by_key['D.価格'] / int(df_sales_by_key['D.価格'].sum())
-
-        if bill_level_summary:
-            df_tmp = self.df_preproc.groupby(self.gu.BILL + key_li).mean().reset_index().set_index(key_li,
-                                                                                                   drop=True)
-            s_count_by_key = df_tmp.groupby(key_li).size()
-        else:
-            s_count_by_key = df_grouped.size()
-        s_count_by_key.name = 'count_' + '_'.join(key_li)
-        s_ratio_by_key = pd.Series(s_count_by_key / s_count_by_key.sum(), name='ratio_' + '_'.join(key_li))
-
-        df_merged = pd.concat([df_sales_by_key, s_count_by_key, s_ratio_by_key], axis=1)
-        df_merged = self.preproc.sort_df(df_merged, ['count_' + '_'.join(key_li)], [False])
-        df_merged["平均支払額"] = df_merged['D.価格'] / df_merged['count_' + '_'.join(key_li)]
-
-        if key_li in self.sca_s.CALC_PRICE_PER_CSTM:
-            df_merged["客単価"] = df_merged["平均支払額"] / df_merged["H.客数（合計）"]
-        else:
-            df_merged.drop(columns="H.客数（合計）", inplace=True)
-
-        # self.chart_cli.create_pie_chart(df=df_merged, amount_col='D.価格')
-        # self.chart_cli.savefig(self.sca_s.OUTPUT_DIR, 'ABC分析_売上構成比.png')
-
-        self.output_dict.update({'ABC分析_' + '_'.join(key_li): df_merged})
+    def _calc_sales_diff(self, df_calc_src, calc_tgt_cols, does_output_csv=False):
+        return_cols = []
+        for c in calc_tgt_cols:
+            # nan -> 1
+            df_calc_src[c + '_増加率'] = (df_calc_src[c + '_売上/日数_special'] / df_calc_src[c + '_売上/日数_normal']).replace(
+                np.nan, 1)
+            return_cols.append(c + '_増加率')
+        if does_output_csv:
+            index_names = '_'.join(df_calc_src.index.names)
+            [self.util.df_to_csv(df_calc_src[c], self.ca_s.OUTPUT_DIR, index_names + '_' + c + '.csv', True) for c in
+             return_cols]
+        return df_calc_src[return_cols].reset_index()
 
 
 if __name__ == '__main__':

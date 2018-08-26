@@ -272,7 +272,10 @@ class MergeMasterTable:
         if prefecture != 'all':
             df_weather = df_weather[df_weather['都道府県'] == prefecture]
         df_weather['年月日'] = pd.to_datetime(df_weather['年月日'], errors='coerce')
-        # df_weather.set_index(pd.DatetimeIndex(df_weather['年月日']), inplace=True)
+
+        # Define rain flg
+        df_weather['雨フラグ'] = df_weather.apply(lambda x: 1 if x['降水量の合計(mm)'] >= 5 else 0, axis=1)
+
         return pd.merge(df_src, df_weather, left_on=['都道府県', 'H.集計対象営業年月日'], right_on=['都道府県', '年月日']) \
             .drop('年月日', axis=1)
 
