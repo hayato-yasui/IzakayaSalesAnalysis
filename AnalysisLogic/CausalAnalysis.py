@@ -30,10 +30,10 @@ class CausalAnalysis:
 
     # def execute(self,tgt_store):
     def execute(self):
-        # tgt_store = ['大和乃山賊', '定楽屋', 'うおにく', 'かこい屋', 'くつろぎ屋', 'ご馳走屋名駅店', 'ご馳走屋金山店',
-        #              '九州乃山賊小倉総本店', '和古屋', '楽屋', '鳥Bouno!', 'ぐるめ屋']
-        tgt_store = ['sample', ]
-        tgt_store = ['大和乃山賊']
+        tgt_store = ['大和乃山賊', '定楽屋', 'うおにく', 'かこい屋', 'くつろぎ屋', 'ご馳走屋名駅店', 'ご馳走屋金山店',
+                     '九州乃山賊小倉総本店', '和古屋', '楽屋', '鳥Bouno!', 'ぐるめ屋']
+        # tgt_store = ['sample', ]
+        # tgt_store = ['大和乃山賊']
         for s in tgt_store:
             self.ca_s.TGT_STORE = self.preproc_s.TGT_STORE = s
             self.ca_s.OUTPUT_DIR = './data/OUTPUT/' + self.ca_s.TGT_STORE + '/'
@@ -62,7 +62,7 @@ class CausalAnalysis:
                                         self.preproc_s.TGT_PERIOD_TOP)
         df_src = self.mmt.merge_calender(df_src, self.mmt_s.F_PATH_CALENDER)
         df_src = self.preproc.calc_entering_and_exiting_time(df_src)
-        df_src = self.preproc.create_stay_presense(df_src, df_src.loc[0, '営業開始時間'], df_src.loc[0, '営業締め時間'])
+        # df_src = self.preproc.create_stay_presense(df_src, df_src.loc[0, '営業開始時間'], df_src.loc[0, '営業締め時間'])
 
         # self.preproc.dt_min_round(df_src, '注文時間', 10)
         # self.preproc.dt_min_round(df_src, '滞在時間', 20)
@@ -91,7 +91,6 @@ class CausalAnalysis:
                                                                  index=df_t_test_rslt.columns),ignore_index=True).sort_values('p')
             if does_output_csv:
                 self.util.df_to_csv(df_t_test_rslt, self.ca_s.OUTPUT_DIR, c + '_t検定.csv')
-        print(1)
 
     def _leveling_sales(self, df_src):
         df_calc_src, calc_tgt_dict = self._calc_tgt_sales(self.ca_s.SUB_GROUP_COLS, self.ca_s.MAIN_GROUP_COLS,
