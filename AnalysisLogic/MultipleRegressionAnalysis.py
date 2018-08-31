@@ -50,25 +50,43 @@ class MultipleRegressionAnalysis:
 
     def _preprocess(self):
         df_src = self.preproc.common_proc(self.preproc_s)
-        preproc_csv_file_name = self.preproc.create_proc_data_csv(df_src, self.preproc_s.PROCESSED_DATA_DIR,
-                                                                  self.preproc_s.TGT_STORE,
-                                                                  self.preproc_s.TGT_PERIOD_FLOOR,
-                                                                  self.preproc_s.TGT_PERIOD_TOP,
-                                                                  memo='_before_grouping')
+        # preproc_csv_file_name = self.preproc.create_proc_data_csv(df_src, self.preproc_s.PROCESSED_DATA_DIR,
+        #                                                           self.preproc_s.TGT_STORE,
+        #                                                           self.preproc_s.TGT_PERIOD_FLOOR,
+        #                                                           self.preproc_s.TGT_PERIOD_TOP,
+        #                                                           memo='_before_grouping')
 
         df_src = self.mmt.merge_store(df_src, self.mmt_s.F_PATH_STORE)
         df_src = self.mmt.merge_weather(df_src, self.mmt_s.DIR_WEATHER, self.preproc_s.TGT_PERIOD_FLOOR,
                                         self.preproc_s.TGT_PERIOD_TOP)
+        df_src = self.mmt.merge_calender(df_src, self.mmt_s.F_PATH_CALENDER)
+        df_src = self.preproc.calc_entering_and_exiting_time(df_src)
+
+        self.preproc.dt_min_round(df_src, '滞在時間', 20)
+        df_item_pivot = self.preproc.tanspose_cols_and_rows(df_src, self.gu.DAY_BILL,
+                                                            self.preproc_s.TGT_TRANPOSE_C_AND_R_COL,
+                                                            self.preproc_s.TRANPOSE_C_AND_R_COUNT_COL)
+
+        df_src['客構成'] = self.preproc.create_cstm_strctr(df_src)
+        df_leveled = self.util.leveling(df_src, self.preproc_s.LEVELING_SUB_GROUP_COLS,
+                                        self.preproc_s.LEVELING_MAIN_GROUP_COLS,
+                                        self.preproc_s.LEVELING_CALC_TGT_COLS, self.preproc_s.LEVELING_DIFF_TGT_COL,
+                                        self.preproc_s.LEVELING_DIFF_CONDITION, True, self.mra_s.OUTPUT_DIR)
+        df_leveled['客単化/滞在時間'] = df_leveled['D.価格_平準化'] // (df_leveled['滞在時間'] / np.timedelta64(1, 'M')).astype(int)
+
+        df_grouped_by_bill = self.preproc.grouping(df_leveled, self.gu.DAY_BILL, self.preproc_s.GROUPING_WAY_BY_BILL)
+        df_grouped_by_bill = pd.merge(df_grouped_by_bill, df_item_pivot)
 
         # Do grouping though, no change df name due to being able to skip those process
         # df_src = self.preproc.grouping(df_src, self.gu.DOW, self.preproc_s.GROUPING_WAY)
-        preproc_csv_file_name = self.preproc.create_proc_data_csv(df_src, self.preproc_s.PROCESSED_DATA_DIR,
-                                                                  self.preproc_s.TGT_STORE,
-                                                                  self.preproc_s.TGT_PERIOD_FLOOR,
-                                                                  self.preproc_s.TGT_PERIOD_TOP,
-                                                                  '_' + self.preproc_s.GROUPING_FILE_MEMO)
+        # preproc_csv_file_name = self.preproc.create_proc_data_csv(df_grouped_by_bill, self.preproc_s.PROCESSED_DATA_DIR,
+        #                                                           self.preproc_s.TGT_STORE,
+        #                                                           self.preproc_s.TGT_PERIOD_FLOOR,
+        #                                                           self.preproc_s.TGT_PERIOD_TOP,
+        #                                                           '_' + self.preproc_s.GROUPING_FILE_MEMO)
 
-        return df_src,preproc_csv_file_name
+        # return df_src,preproc_csv_file_name
+        return df_src, None
 
     def _get_preproc_data(self, csv_file_name):
         return pd.read_csv(self.preproc_s.PROCESSED_DATA_DIR + csv_file_name, encoding='cp932')

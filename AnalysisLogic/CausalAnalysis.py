@@ -30,10 +30,10 @@ class CausalAnalysis:
 
     # def execute(self,tgt_store):
     def execute(self):
-        tgt_store = ['大和乃山賊', '定楽屋', 'うおにく', 'かこい屋', 'くつろぎ屋', 'ご馳走屋名駅店', 'ご馳走屋金山店',
-                     '九州乃山賊小倉総本店', '和古屋', '楽屋', '鳥Bouno!', 'ぐるめ屋']
+        # tgt_store = ['大和乃山賊', '定楽屋', 'うおにく', 'かこい屋', 'くつろぎ屋', 'ご馳走屋名駅店', 'ご馳走屋金山店',
+        #              '九州乃山賊小倉総本店', '和古屋', '楽屋', '鳥Bouno!', 'ぐるめ屋']
         # tgt_store = ['sample', ]
-        # tgt_store = ['大和乃山賊']
+        tgt_store = ['大和乃山賊']
         for s in tgt_store:
             self.ca_s.TGT_STORE = self.preproc_s.TGT_STORE = s
             self.ca_s.OUTPUT_DIR = './data/OUTPUT/' + self.ca_s.TGT_STORE + '/'
@@ -49,8 +49,9 @@ class CausalAnalysis:
             # df_daily = df_grouped_src[self.cols]
             # self.util.df_to_csv(df_daily, self.ca_s.OUTPUT_DIR, '大和乃山賊＿サンプル.csv')
 
-            # self._leveling_by_day_sales_up()
-            df_leveled = self._leveling_sales(self.df_preproc)
+            df_leveled = self.util.leveling(self.df_preproc,self.preproc_s.LEVELING_SUB_GROUP_COLS, self.preproc_s.LEVELING_MAIN_GROUP_COLS,
+                                                          self.preproc_s.LEVELING_CALC_TGT_COLS, self.preproc_s.LEVELING_DIFF_TGT_COL,
+                                                          self.preproc_s.LEVELING_DIFF_CONDITION,True,self.ca_s.OUTPUT_DIR)
             self.t_test(df_leveled, self.ca_s.T_TEST_TGT_COL, self.ca_s.T_TEST_DIFF_COL, self.ca_s.T_TEST_DIFF_CONDITION,True)
 
             print(s + " is finish")
@@ -77,7 +78,7 @@ class CausalAnalysis:
     def t_test(self, df, index_col, diff_tgt_col, diff_condition,does_output_csv=False):
         df_t_test_rslt = pd.DataFrame(columns=['item', 'src_count','src_avg','tgt_count','tgt_avg','t', 'p'])
         df.set_index(index_col, inplace=True)
-        for c in self.ca_s.CALC_TGT_COLS:
+        for c in self.preproc_s.LEVELING_CALC_TGT_COLS:
             df_src = df[df[diff_tgt_col] != diff_condition][c + '_平準化']
             df_tgt = df[df[diff_tgt_col] == diff_condition][c + '_平準化']
 
@@ -92,53 +93,53 @@ class CausalAnalysis:
             if does_output_csv:
                 self.util.df_to_csv(df_t_test_rslt, self.ca_s.OUTPUT_DIR, c + '_t検定.csv')
 
-    def _leveling_sales(self, df_src):
-        df_calc_src, calc_tgt_dict = self._calc_tgt_sales(self.ca_s.SUB_GROUP_COLS, self.ca_s.MAIN_GROUP_COLS,
-                                                          self.ca_s.CALC_TGT_COLS, self.ca_s.DIFF_TGT_COL,
-                                                          self.ca_s.DIFF_CONDITION)
-        df_leveling_ratio = self._calc_sales_diff(df_calc_src, self.ca_s.CALC_TGT_COLS, does_output_csv=True)
-        df_merged_ratio = pd.merge(df_src, df_leveling_ratio, on=self.ca_s.MAIN_GROUP_COLS)
-        for c in calc_tgt_dict.keys():
-            df_merged_ratio[c + '_平準化'] = df_merged_ratio.apply(
-                lambda x: x[c] // x[c + '_増加率'] if x[self.ca_s.DIFF_TGT_COL] == self.ca_s.DIFF_CONDITION else x[c],
-                axis=1)
-        return df_merged_ratio
+    # def _leveling_sales(self, df_src,sub_group_cols,main_group_cols,calc_tgt_cols,diff_tgt_col,diff_condition,does_output_csv=False,output_dir=None):
+    #     df_calc_src, calc_tgt_dict = self.util.calc_tgt_sales(df_src,self.ca_s.SUB_GROUP_COLS, self.ca_s.MAIN_GROUP_COLS,
+    #                                                       self.ca_s.CALC_TGT_COLS, self.ca_s.DIFF_TGT_COL,
+    #                                                       self.ca_s.DIFF_CONDITION)
+    #     df_leveling_ratio = self.util.calc_sales_diff(df_calc_src, self.ca_s.CALC_TGT_COLS, does_output_csv=True,output_dir=self.ca_s.OUTPUT_DIR)
+    #     df_merged_ratio = pd.merge(df_src, df_leveling_ratio, on=self.ca_s.MAIN_GROUP_COLS)
+    #     for c in calc_tgt_dict.keys():
+    #         df_merged_ratio[c + '_平準化'] = df_merged_ratio.apply(
+    #             lambda x: x[c] // x[c + '_増加率'] if x[self.ca_s.DIFF_TGT_COL] == self.ca_s.DIFF_CONDITION else x[c],
+    #             axis=1)
+    #     return df_merged_ratio
 
-    def _calc_tgt_sales(self, sub_group_cols: list, main_group_cols: list, calc_tgt_cols: list, diff_tgt_col: str,
-                        diff_condition):
-        calc_tgt_dict = dict()
-        for c in calc_tgt_cols:
-            calc_tgt_dict.update({c: [c + '_sum', c + '_count']})
-        df_grouped = self.df_preproc[sub_group_cols + [diff_tgt_col] + calc_tgt_cols]
-        drop_cols = [c for c in sub_group_cols if c not in main_group_cols] + [diff_tgt_col]
-
-        df_normal = df_grouped[df_grouped[diff_tgt_col] != diff_condition].groupby(
-            sub_group_cols + [diff_tgt_col]).sum().reset_index().drop(drop_cols, axis=1)
-        df_special = df_grouped[df_grouped[diff_tgt_col] == diff_condition].groupby(
-            sub_group_cols + [diff_tgt_col]).sum().reset_index().drop(drop_cols, axis=1)
-        dfs = [df_normal, df_special]
-        for idx, df in enumerate(dfs):
-            df = df.groupby(main_group_cols).agg(['sum', 'count']).reset_index()
-            df.columns = ['_'.join(c) if c[1] != '' else c[0] for c in df.columns]
-            for k, v_list in calc_tgt_dict.items():
-                df[k + '_売上/日数'] = df[v_list[0]] / df[v_list[1]]
-            dfs[idx] = df
-        df_calc_src = pd.merge(dfs[0], dfs[1], on=main_group_cols, how='outer',
-                               suffixes=('_normal', '_special')).set_index(main_group_cols)
-        return df_calc_src, calc_tgt_dict
-
-    def _calc_sales_diff(self, df_calc_src, calc_tgt_cols, does_output_csv=False):
-        return_cols = []
-        for c in calc_tgt_cols:
-            # nan -> 1
-            df_calc_src[c + '_増加率'] = (df_calc_src[c + '_売上/日数_special'] / df_calc_src[c + '_売上/日数_normal']).replace(
-                np.nan, 1)
-            return_cols.append(c + '_増加率')
-        if does_output_csv:
-            index_names = '_'.join(df_calc_src.index.names)
-            [self.util.df_to_csv(df_calc_src[c], self.ca_s.OUTPUT_DIR, index_names + '_' + c + '.csv', True) for c in
-             return_cols]
-        return df_calc_src[return_cols].reset_index()
+    # def _calc_tgt_sales(self, sub_group_cols: list, main_group_cols: list, calc_tgt_cols: list, diff_tgt_col: str,
+    #                     diff_condition):
+    #     calc_tgt_dict = dict()
+    #     for c in calc_tgt_cols:
+    #         calc_tgt_dict.update({c: [c + '_sum', c + '_count']})
+    #     df_grouped = self.df_preproc[sub_group_cols + [diff_tgt_col] + calc_tgt_cols]
+    #     drop_cols = [c for c in sub_group_cols if c not in main_group_cols] + [diff_tgt_col]
+    #
+    #     df_normal = df_grouped[df_grouped[diff_tgt_col] != diff_condition].groupby(
+    #         sub_group_cols + [diff_tgt_col]).sum().reset_index().drop(drop_cols, axis=1)
+    #     df_special = df_grouped[df_grouped[diff_tgt_col] == diff_condition].groupby(
+    #         sub_group_cols + [diff_tgt_col]).sum().reset_index().drop(drop_cols, axis=1)
+    #     dfs = [df_normal, df_special]
+    #     for idx, df in enumerate(dfs):
+    #         df = df.groupby(main_group_cols).agg(['sum', 'count']).reset_index()
+    #         df.columns = ['_'.join(c) if c[1] != '' else c[0] for c in df.columns]
+    #         for k, v_list in calc_tgt_dict.items():
+    #             df[k + '_売上/日数'] = df[v_list[0]] / df[v_list[1]]
+    #         dfs[idx] = df
+    #     df_calc_src = pd.merge(dfs[0], dfs[1], on=main_group_cols, how='outer',
+    #                            suffixes=('_normal', '_special')).set_index(main_group_cols)
+    #     return df_calc_src, calc_tgt_dict
+    #
+    # def _calc_sales_diff(self, df_calc_src, calc_tgt_cols, does_output_csv=False):
+    #     return_cols = []
+    #     for c in calc_tgt_cols:
+    #         # nan -> 1
+    #         df_calc_src[c + '_増加率'] = (df_calc_src[c + '_売上/日数_special'] / df_calc_src[c + '_売上/日数_normal']).replace(
+    #             np.nan, 1)
+    #         return_cols.append(c + '_増加率')
+    #     if does_output_csv:
+    #         index_names = '_'.join(df_calc_src.index.names)
+    #         [self.util.df_to_csv(df_calc_src[c], self.ca_s.OUTPUT_DIR, index_names + '_' + c + '.csv', True) for c in
+    #          return_cols]
+    #     return df_calc_src[return_cols].reset_index()
 
 
 if __name__ == '__main__':

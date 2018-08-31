@@ -1,4 +1,5 @@
 import datetime
+from Common.Logic.Preprocess import *
 TGT_PERIOD_FLOOR = datetime.date(2018, 4, 1)
 TGT_PERIOD_TOP = datetime.date(2018, 6, 30)
 
@@ -35,11 +36,18 @@ class PreprocessSetting(object):
     PROCESSED_DATA_DIR = './data/Input/processed_data/'+ TGT_STORE +'/'
 
 
-    GROUPING_WAY_BY_BILL = {'H.曜日': "min", 'H.伝票発行日': "min", 'H.客数（合計）': "min",'H.客数（男）': "min",
-                            'H.客数（女）': "min",'H.伝票金額': "min", '滞在時間': "min",'C.客層': "min",'H.テーブル番号名': "min",}
+    GROUPING_WAY_BY_BILL = {'H.曜日': "min", '滞在時間': "min",'C.客層': "min",'H.テーブル番号名': "min","雨フラグ":"min",
+                            '平均気温(℃)':"min","客構成":"min","男性比率":"min",'D.価格_平準化':"sum"}
 
 
     GROUPING_FILE_MEMO = '縦横変換'
 
-    TGT_TRANPOSE_C_AND_R_COL = ['D.商品名']
+    # TGT_TRANPOSE_C_AND_R_COL = ['D.商品名']
+    TGT_TRANPOSE_C_AND_R_COL = ['D.商品カテゴリ2']
     TRANPOSE_C_AND_R_COUNT_COL = 'D.数量'
+
+    LEVELING_DIFF_TGT_COL = '翌日が休日'
+    LEVELING_DIFF_CONDITION = 1
+    LEVELING_CALC_TGT_COLS = ['D.価格','D.数量']
+    LEVELING_SUB_GROUP_COLS = GroupingUnit.DAY_ITEM_CATEGORY2
+    LEVELING_MAIN_GROUP_COLS = GroupingUnit.ITEM_CATEGORY2

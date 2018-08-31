@@ -26,7 +26,7 @@ from sklearn.metrics import (roc_curve, auc, accuracy_score)
 import pydotplus as pdp
 from sklearn import tree
 # from IPython.display import Image
-from graphviz import Digraph
+# from graphviz import Digraph
 from sklearn.externals.six import StringIO
 
 
@@ -38,7 +38,6 @@ from Common.Setting.Common.PreprocessSetting import *
 from Common.util import Util
 
 
-# 重回帰分析クラス
 class SalesTreeCreation:
     # clf = DecisionTreeClassifier(random_state=0)
     clf = RandomForestClassifier(n_estimators=150)
@@ -56,10 +55,10 @@ class SalesTreeCreation:
 
     def execute(self):
         self.df_preproc, preproc_csv_file_name = self._preprocess()
+        self._create_decision_tree()
         # preproc_csv_file_name = ''
         # self.df_preproc = self.preproc.fetch_csv_and_create_src_df(self.preproc_s.PROCESSED_DATA_DIR
         #                                                            , [preproc_csv_file_name])
-        self._create_decision_tree()
         # self._postprocess()
 
     def _preprocess(self):
@@ -70,25 +69,32 @@ class SalesTreeCreation:
 
         self.preproc.dt_min_round(df_src, '滞在時間', 20)
         df_src['客構成'] = self.preproc.create_cstm_strctr(df_src)
-        df_grouped_by_bill = self.preproc.grouping(df_src, self.gu.DAY_BILL, self.preproc_s.GROUPING_WAY_BY_BILL)
-        df_grouped_by_bill = pd.merge(df_grouped_by_bill, df_item_pivot)
-        # df_src = self.preproc.change_label_name(df_src)
-        preproc_csv_file_name = self.preproc.create_proc_data_csv(df_grouped_by_bill, self.preproc_s.PROCESSED_DATA_DIR,
-                                                                  self.preproc_s.TGT_STORE,
-                                                                  self.preproc_s.TGT_PERIOD_FLOOR,
-                                                                  self.preproc_s.TGT_PERIOD_TOP,
-                                                                  '_' + self.preproc_s.GROUPING_FILE_MEMO)
+        df_leveled = self.util.leveling(self.df_preproc, self.preproc_s.LEVELING_SUB_GROUP_COLS,
+                                        self.preproc_s.LEVELING_MAIN_GROUP_COLS,
+                                        self.preproc_s.LEVELING_CALC_TGT_COLS, self.preproc_s.LEVELING_DIFF_TGT_COL,
+                                        self.preproc_s.LEVELING_DIFF_CONDITION, True, self.smc_s.OUTPUT_DIR)
+        df_leveled['客単化/滞在時間'] = df_leveled['D.価格_平準化'] // df_leveled['滞在時間']
 
-        return df_grouped_by_bill, preproc_csv_file_name
+        df_grouped_by_bill = self.preproc.grouping(df_leveled, self.gu.DAY_BILL, self.preproc_s.GROUPING_WAY_BY_BILL)
+        df_grouped_by_bill = pd.merge(df_grouped_by_bill, df_item_pivot)
+
+        # preproc_csv_file_name = self.preproc.create_proc_data_csv(df_grouped_by_bill, self.preproc_s.PROCESSED_DATA_DIR,
+        #                                                           self.preproc_s.TGT_STORE,
+        #                                                           self.preproc_s.TGT_PERIOD_FLOOR,
+        #                                                           self.preproc_s.TGT_PERIOD_TOP,
+        #                                                           '_' + self.preproc_s.GROUPING_FILE_MEMO)
+
+        # return df_grouped_by_bill, preproc_csv_file_name
+        return df_grouped_by_bill,
 
     def _get_preproc_data(self, csv_file_name):
         return pd.read_csv(self.preproc_s.PROCESSED_DATA_DIR + csv_file_name, encoding='cp932')
 
     def _create_decision_tree(self):
-        self.df_preproc.drop(columns=['H.集計対象営業年月日', 'H.伝票番号','H.伝票発行日'], inplace=True)
+        self.df_preproc.drop(columns=['H.集計対象営業年月日', 'H.伝票番号'], inplace=True)
         self.df_preproc['滞在時間'] = (self.df_preproc['滞在時間'] / np.timedelta64(1, 'M')).astype(int)
         self.preproc.replace_missing_value(self.df_preproc)
-        X, y = self._create_prd_and_obj_valiables(self.df_preproc, 'H.伝票金額')
+        X, y = self._create_prd_and_obj_valiables(self.df_preproc, 'D.価格_平準化')
         X = pd.get_dummies(X)
         df_train, df_test, label_train, label_test = train_test_split(X, y)
 

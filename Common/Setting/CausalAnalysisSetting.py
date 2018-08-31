@@ -43,15 +43,6 @@ class CausalAnalysisSetting(object):
 
     FIG_FILE_NAME = '定楽屋 金山店2018-04-01-2018-06-30.png'
 
-    DIFF_TGT_COL = '翌日が休日'
-    DIFF_CONDITION = 1
-    CALC_TGT_COLS = ['D.価格']
-    SUB_GROUP_COLS = GroupingUnit.DAY_ITEM_CATEGORY2
-    MAIN_GROUP_COLS = GroupingUnit.ITEM_CATEGORY2
-    # SUB_GROUP_COLS = GroupingUnit.STORE_DAY
-    # MAIN_GROUP_COLS = GroupingUnit.STORE
-
-
     T_TEST_TGT_COL = 'D.商品カテゴリ2'
     # T_TEST_TGT_COL = '店舗名'
     T_TEST_DIFF_COL = '雨フラグ'
@@ -70,3 +61,12 @@ class PreprocessSetting(object):
     FILE_MEMO = '_before_grouping'
 
     TGT_TRANPOSE_C_AND_R_COL = ['D.商品名']
+
+
+    LEVELING_DIFF_TGT_COL = '翌日が休日'
+    LEVELING_DIFF_CONDITION = 1
+    LEVELING_CALC_TGT_COLS = ['D.価格','D.数量']
+    LEVELING_SUB_GROUP_COLS = GroupingUnit.DAY_ITEM_CATEGORY2
+    LEVELING_MAIN_GROUP_COLS = GroupingUnit.ITEM_CATEGORY2
+    # SUB_GROUP_COLS = GroupingUnit.STORE_DAY
+    # MAIN_GROUP_COLS = GroupingUnit.STORE
