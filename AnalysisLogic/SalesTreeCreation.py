@@ -73,7 +73,7 @@ class SalesTreeCreation:
                                         self.preproc_s.LEVELING_MAIN_GROUP_COLS,
                                         self.preproc_s.LEVELING_CALC_TGT_COLS, self.preproc_s.LEVELING_DIFF_TGT_COL,
                                         self.preproc_s.LEVELING_DIFF_CONDITION, True, self.smc_s.OUTPUT_DIR)
-        df_leveled['客単化/滞在時間'] = df_leveled['D.価格_平準化'] // df_leveled['滞在時間']
+        df_leveled['客単化/滞在時間'] = df_leveled['D.価格_平準化'] // (df_leveled['滞在時間'] / np.timedelta64(1, 'M')).astype(int)
 
         df_grouped_by_bill = self.preproc.grouping(df_leveled, self.gu.DAY_BILL, self.preproc_s.GROUPING_WAY_BY_BILL)
         df_grouped_by_bill = pd.merge(df_grouped_by_bill, df_item_pivot)
