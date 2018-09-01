@@ -217,6 +217,11 @@ class Preprocess:
         df[col] = df[col].dt.round(str(round_min) + 'min')
 
     @staticmethod
+    def convert_dtype_timedelta_to_int(df, col, unit='M'):
+        # df[col] = (df[col] / np.timedelta64(1, 'M')).astype(int)
+        df[col] = (df[col] / np.timedelta64(1, 'm')).astype(int)
+
+    @staticmethod
     def create_cstm_strctr(df):
         return "男 : " + df['H.客数（男）'].astype(str) + '人, 女 : ' + df['H.客数（女）'].astype(str) + '人'
 

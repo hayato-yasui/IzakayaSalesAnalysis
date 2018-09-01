@@ -3,8 +3,8 @@ from Common.Logic.Preprocess import *
 TGT_PERIOD_FLOOR = datetime.date(2018, 4, 1)
 TGT_PERIOD_TOP = datetime.date(2018, 6, 30)
 
-# TGT_STORE = '大和乃山賊'
-TGT_STORE = '定楽屋'
+TGT_STORE = '大和乃山賊'
+# TGT_STORE = '定楽屋'
 # TGT_STORE = 'うおにく'
 # TGT_STORE = 'かこい屋'
 # TGT_STORE = 'くつろぎ屋'
@@ -36,9 +36,10 @@ class PreprocessSetting(object):
     PROCESSED_DATA_DIR = './data/Input/processed_data/'+ TGT_STORE +'/'
 
 
-    GROUPING_WAY_BY_BILL = {'H.曜日': "min", '滞在時間': "min",'C.客層': "min",'H.テーブル番号名': "min","雨フラグ":"min",
-                            '平均気温(℃)':"min","客構成":"min","男性比率":"min",'D.価格_平準化':"sum"}
+    GROUPING_WAY_BY_BILL = {'滞在時間': "min",'C.客層': "min",'H.テーブル番号名': "min","雨フラグ":"min",
+                            '平均気温(℃)':"min","客構成":"min","男性比率":"min",'客単価高フラグ':"min"}
 
+    # GROUPING_WAY_BY_BILL = {'C.客層': "min","雨フラグ":"min","客構成":"min","男性比率":"min",'客単価高フラグ':"min"}
 
     GROUPING_FILE_MEMO = '縦横変換'
 
