@@ -1,9 +1,10 @@
 import datetime
+from Common.Logic.Preprocess import *
 TGT_PERIOD_FLOOR = datetime.date(2018, 4, 1)
 TGT_PERIOD_TOP = datetime.date(2018, 6, 30)
 
-# TGT_STORE = '大和乃山賊'
-TGT_STORE = '定楽屋'
+TGT_STORE = '大和乃山賊'
+# TGT_STORE = '定楽屋'
 # TGT_STORE = 'うおにく'
 # TGT_STORE = 'かこい屋'
 # TGT_STORE = 'くつろぎ屋'
@@ -20,7 +21,7 @@ class CorrAnalysisSetting(object):
     TGT_STORE = TGT_STORE
     TGT_PERIOD_FLOOR = TGT_PERIOD_FLOOR
     TGT_PERIOD_TOP = TGT_PERIOD_TOP
-    CORR_LIMIT = 0.5
+    CORR_LIMIT = 0.7
     OUTPUT_DIR = './data/OUTPUT/' + TGT_STORE + '/'
 
 
@@ -40,5 +41,13 @@ class PreprocessSetting(object):
 
     GROUPING_FILE_MEMO = '縦横変換'
 
-    TGT_TRANPOSE_C_AND_R_COL = ['D.商品名']
+    TGT_TRANPOSE_C_AND_R_COL = ['D.商品カテゴリ2']
     TRANPOSE_C_AND_R_COUNT_COL = 'D.数量'
+
+    LEVELING_DIFF_TGT_COL = '翌日が休日'
+    LEVELING_DIFF_CONDITION = 1
+    LEVELING_CALC_TGT_COLS = ['D.価格','D.数量','H.伝票金額']
+    LEVELING_SUB_GROUP_COLS = GroupingUnit.DAY_ITEM_CATEGORY2
+    LEVELING_MAIN_GROUP_COLS = GroupingUnit.ITEM_CATEGORY2
+    # SUB_GROUP_COLS = GroupingUnit.STORE_DAY
+    # MAIN_GROUP_COLS = GroupingUnit.STORE

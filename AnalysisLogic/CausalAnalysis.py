@@ -15,7 +15,6 @@ from Common.Setting.Common.PreprocessSetting import *
 from Common.util import Util
 
 
-# 店舗の現状を把握する為に加工したデータをExcelや図に出力するクラス
 class CausalAnalysis:
     def __init__(self):
         self.chart_cli = ChartClient()
@@ -49,10 +48,12 @@ class CausalAnalysis:
             # df_daily = df_grouped_src[self.cols]
             # self.util.df_to_csv(df_daily, self.ca_s.OUTPUT_DIR, '大和乃山賊＿サンプル.csv')
 
-            df_leveled = self.util.leveling(self.df_preproc,self.preproc_s.LEVELING_SUB_GROUP_COLS, self.preproc_s.LEVELING_MAIN_GROUP_COLS,
-                                                          self.preproc_s.LEVELING_CALC_TGT_COLS, self.preproc_s.LEVELING_DIFF_TGT_COL,
-                                                          self.preproc_s.LEVELING_DIFF_CONDITION,True,self.ca_s.OUTPUT_DIR)
-            self.t_test(df_leveled, self.ca_s.T_TEST_TGT_COL, self.ca_s.T_TEST_DIFF_COL, self.ca_s.T_TEST_DIFF_CONDITION,True)
+            df_leveled = self.util.leveling(self.df_preproc, self.preproc_s.LEVELING_SUB_GROUP_COLS,
+                                            self.preproc_s.LEVELING_MAIN_GROUP_COLS,
+                                            self.preproc_s.LEVELING_CALC_TGT_COLS, self.preproc_s.LEVELING_DIFF_TGT_COL,
+                                            self.preproc_s.LEVELING_DIFF_CONDITION, True, self.ca_s.OUTPUT_DIR)
+            self.t_test(df_leveled, self.ca_s.T_TEST_TGT_COL, self.ca_s.T_TEST_DIFF_COL,
+                        self.ca_s.T_TEST_DIFF_CONDITION, True)
 
             print(s + " is finish")
 
@@ -75,8 +76,8 @@ class CausalAnalysis:
 
         return df_src, preproc_csv_file_name
 
-    def t_test(self, df, index_col, diff_tgt_col, diff_condition,does_output_csv=False):
-        df_t_test_rslt = pd.DataFrame(columns=['item', 'src_count','src_avg','tgt_count','tgt_avg','t', 'p'])
+    def t_test(self, df, index_col, diff_tgt_col, diff_condition, does_output_csv=False):
+        df_t_test_rslt = pd.DataFrame(columns=['item', 'src_count', 'src_avg', 'tgt_count', 'tgt_avg', 't', 'p'])
         df.set_index(index_col, inplace=True)
         for c in self.preproc_s.LEVELING_CALC_TGT_COLS:
             df_src = df[df[diff_tgt_col] != diff_condition][c + '_平準化']
@@ -87,9 +88,10 @@ class CausalAnalysis:
                 df_src_by_item = df_src[df_src.index == item]
                 df_tgt_by_item = df_tgt[df_tgt.index == item]
                 t, p = stats.ttest_ind(df_src_by_item, df_tgt_by_item, equal_var=False)
-                df_t_test_rslt = df_t_test_rslt.append(pd.Series([item, df_src_by_item.count(),df_src_by_item.mean(),
-                                                                  df_tgt_by_item.count(),df_tgt_by_item.mean(),t, p],
-                                                                 index=df_t_test_rslt.columns),ignore_index=True).sort_values('p')
+                df_t_test_rslt = df_t_test_rslt.append(pd.Series([item, df_src_by_item.count(), df_src_by_item.mean(),
+                                                                  df_tgt_by_item.count(), df_tgt_by_item.mean(), t, p],
+                                                                 index=df_t_test_rslt.columns),
+                                                       ignore_index=True).sort_values('p')
             if does_output_csv:
                 self.util.df_to_csv(df_t_test_rslt, self.ca_s.OUTPUT_DIR, c + '_t検定.csv')
 

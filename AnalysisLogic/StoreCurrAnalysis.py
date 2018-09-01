@@ -102,8 +102,8 @@ class StoreCurrAnalysis:
 
         df_daily = self.util.moving_average(df_daily, 'H.伝票金額', 7)
         df_daily = self.util.moving_average(df_daily, 'H.客数（合計）', 7)
-        self.chart_cli.plot_axis_is_index(df_daily, needsSave=True,
-                                          file_path=self.sca_s.OUTPUT_DIR + '移動平均_' + self.sca_s.TGT_STORE +'.png')
+        self.chart_cli.plot_axis_is_index(df_daily, does_need_saving=True,
+                                          file_path=self.sca_s.OUTPUT_DIR + '移動平均_' + self.sca_s.TGT_STORE + '.png')
 
     def _sheet_occupancy(self):
         time_cols = []
@@ -184,6 +184,7 @@ class StoreCurrAnalysis:
         # self.chart_cli.savefig(self.sca_s.OUTPUT_DIR, 'ABC分析_売上構成比.png')
 
         self.output_dict.update({'ABC分析_' + '_'.join(key_li): df_merged})
+
 
 if __name__ == '__main__':
     sca = StoreCurrAnalysis()

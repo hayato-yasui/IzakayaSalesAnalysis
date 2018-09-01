@@ -33,16 +33,16 @@ class ChartClient:
         df.plot(y=amount_cols_li, figsize=figsize, alpha=alpha)
 
     @staticmethod
-    def plot_x_y(df, x, y, tittle, needsSave=False, file_path=None):
+    def plot_x_y(df, x, y, tittle, does_need_saving=False, file_path=None):
         plt.plot(df[x], df[y], label=tittle)
         plt.legend()
         plt.show()
-        if needsSave:
+        if does_need_saving:
             dir_pair = os.path.split(file_path)
             ChartClient.savefig(dir_pair[0], dir_pair[1])
 
     @staticmethod
-    def plot_axis_is_index(df, needsSave=False, file_path=None):
+    def plot_axis_is_index(df, does_need_saving=False, file_path=None):
         # df.plot(subplots=True,grid=True,colormap='Accent',legend=True,alpha=0.5,layout=(2, 2))
         cols = ['H.伝票金額', 'H.客数（合計）', 'avg_H.伝票金額', 'avg_H.客数（合計）']
         for idx, c in enumerate(cols):
@@ -105,7 +105,7 @@ class ChartClient:
         #
         # df_1.plot(grid=True,colormap='Accent',legend=True,alpha=0.5)
         # df_2.plot(grid=True,colormap='Accent',legend=True,alpha=0.5)
-        if needsSave:
+        if does_need_saving:
             dir_pair = os.path.split(file_path)
             ChartClient.savefig(dir_pair[0] + '/', dir_pair[1])
         else:
