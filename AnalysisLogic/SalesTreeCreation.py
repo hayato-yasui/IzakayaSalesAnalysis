@@ -1,3 +1,4 @@
+#-*- coding: utf-8 -*-
 import pandas as pd
 import datetime
 import matplotlib.pyplot as plt
@@ -5,6 +6,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 import pydotplus as pdp
 from sklearn import tree
+from sklearn.externals.six import StringIO
 
 from Common.Logic.ChartClient import ChartClient
 from Common.Logic.Preprocess import *
@@ -82,16 +84,16 @@ class SalesTreeCreation:
         print("予測精度")
         print(sum(predicted == y) / len(y))
 
-
-        dot_data = tree.export_graphviz(self.clf,  # 決定木オブジェクトを一つ指定する
-                                        out_file=None,  # ファイルは介さずにGraphvizにdot言語データを渡すのでNone
+        dot_data = StringIO()
+        tree.export_graphviz(self.clf,  # 決定木オブジェクトを一つ指定する
+                                        out_file=dot_data,  # ファイルは介さずにGraphvizにdot言語データを渡すのでNone
                                         filled=True,  # Trueにすると、分岐の際にどちらのノードに多く分類されたのか色で示してくれる
                                         rounded=True,  # Trueにすると、ノードの角を丸く描画する。
                                         feature_names=X.columns,  # これを指定しないとチャート上で特徴量の名前が表示されない
                                         # class_names=y.name,  # これを指定しないとチャート上で分類名が表示されない
                                         special_characters=True  # 特殊文字を扱えるようにする
                                         )
-        graph = pdp.graph_from_dot_data(dot_data)
+        graph = pdp.graph_from_dot_data(dot_data.getvalue())
         graph.write_pdf(self.stc_s.OUTPUT_DIR + '決定木.pdf')
 
         # self.calc_elmnt_importance(X)
